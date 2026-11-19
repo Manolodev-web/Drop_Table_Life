@@ -264,7 +264,7 @@ export function buildDesk() {
   phoneTex.colorSpace = THREE.SRGBColorSpace;
   phoneTex.anisotropy = 4;
 
-  function drawPhone() {
+  function drawPhone(alertActive = false) {
     const ctx = phoneCtx;
     const isCampus = currentScenario === 1;
     const grad = ctx.createLinearGradient(0, 0, 128, 256);
@@ -274,16 +274,24 @@ export function buildDesk() {
     ctx.fillStyle = grad; ctx.fillRect(0, 0, 128, 256);
     ctx.fillStyle = '#ffffff'; ctx.font = '300 32px Inter, sans-serif'; ctx.textAlign = 'center';
     ctx.fillText(isCampus ? '10:20' : '23:47', 64, 68);
-    ctx.fillStyle = 'rgba(255,255,255,0.12)'; ctx.fillRect(8, 108, 112, 68);
-    ctx.strokeStyle = 'rgba(255,255,255,0.22)'; ctx.strokeRect(8, 108, 112, 68);
+    ctx.fillStyle = alertActive ? 'rgba(52,211,153,0.22)' : 'rgba(255,255,255,0.12)';
+    ctx.fillRect(8, 108, 112, 68);
+    ctx.strokeStyle = alertActive ? 'rgba(52,211,153,0.9)' : 'rgba(255,255,255,0.22)';
+    ctx.lineWidth = alertActive ? 2 : 1;
+    ctx.strokeRect(8, 108, 112, 68);
+    ctx.lineWidth = 1;
     ctx.fillStyle = isCampus ? '#34d399' : '#f59e0b'; ctx.font = 'bold 10px Inter, sans-serif'; ctx.textAlign = 'left';
     ctx.fillText(isCampus ? 'BD · Supervivientes' : 'Riesgos · ahora', 14, 126);
+    if (alertActive) {
+      ctx.fillStyle = '#34d399';
+      ctx.beginPath(); ctx.arc(110, 122, 4, 0, Math.PI * 2); ctx.fill();
+    }
     ctx.fillStyle = '#e2e8f0'; ctx.font = '10px Inter, sans-serif';
     ctx.fillText(isCampus ? 'Diego: ¿Alguien' : 'Saldos en rojo:', 14, 144);
     ctx.fillText(isCampus ? 'entendió SQL?' : 'URGENTE ⚠', 14, 158);
     phoneTex.needsUpdate = true;
   }
-  drawPhone();
+  drawPhone(false);
 
   const pScreenMat = new THREE.MeshBasicMaterial({ map: phoneTex, toneMapped: false });
   const pScreen = new THREE.Mesh(new THREE.PlaneGeometry(0.072, 0.152), pScreenMat);
@@ -339,20 +347,47 @@ export function buildDesk() {
   g.add(mugHitbox);
 
   // --- estado / API del escritorio ---
-  let mugOpen = false, mugTarget = 0, clockAcc = 0, blink = true;
+  let mugOpen = false, mugTarget = 0, mugClicks = 0, clockAcc = 0, blink = true;
   let phoneHover = 0, notebookHover = 0, mugHover = 0;
+  let phoneAlert = false, alertTime = 0, alertPulse = 0;
+
+  function applyPhoneVisuals() {
+    phone.scale.setScalar(1 + phoneHover * 0.10);
+    phone.position.y = phoneBaseY + phoneHover * 0.012;
+    pBodyMat.emissiveIntensity = Math.max(phoneHover * 0.55, alertPulse * 0.85);
+    pScreenMat.color.setScalar(1 + phoneHover * 0.28 + alertPulse * 0.55);
+  }
 
   return {
     group: g,
     interactives: [monitor, mug, mugHitbox, phone, phoneHitbox, notebook, notebookHitbox, p1, p2, p3],
     screenCenter,
     get mugOpen() { return mugOpen; },
+    get mugClicks() { return mugClicks; },
     setScenario(id) {
       currentScenario = id;
       drawLock(blink);
-      drawPhone();
+      drawPhone(phoneAlert);
     },
-    toggleMug() { mugOpen = !mugOpen; mugTarget = mugOpen ? Math.PI : 0; return mugOpen; },
+    setPhoneAlert(v) {
+      const next = !!v;
+      if (phoneAlert === next) return;
+      phoneAlert = next;
+      alertTime = 0;
+      if (!phoneAlert) {
+        alertPulse = 0;
+        phone.position.set(0.58, phoneBaseY + phoneHover * 0.012, 0.08);
+        phone.rotation.set(0, -0.32, 0);
+      }
+      drawPhone(phoneAlert);
+      applyPhoneVisuals();
+    },
+    toggleMug() {
+      mugClicks += 1;
+      mugOpen = mugClicks % 2 === 1;
+      mugTarget = mugClicks * Math.PI;
+      return mugOpen;
+    },
     setScreenHover(h) { screen.material.color.setScalar(h ? 1.18 : 1); },
     setItemHover(tag) {
       // Feedback visual claro (elevación + escala + brillo emisivo) al pasar el cursor
@@ -360,10 +395,7 @@ export function buildDesk() {
       notebookHover += ((tag === 'notebook' ? 1 : 0) - notebookHover) * 0.25;
       mugHover += ((tag === 'mug' ? 1 : 0) - mugHover) * 0.25;
 
-      phone.scale.setScalar(1 + phoneHover * 0.10);
-      phone.position.y = phoneBaseY + phoneHover * 0.012;
-      pBodyMat.emissiveIntensity = phoneHover * 0.55;
-      pScreenMat.color.setScalar(1 + phoneHover * 0.28);
+      applyPhoneVisuals();
 
       notebook.scale.setScalar(1 + notebookHover * 0.07);
       notebook.position.y = nbBaseY + notebookHover * 0.010;
@@ -376,6 +408,21 @@ export function buildDesk() {
     },
     update(t, dt) {
       mug.rotation.y += (mugTarget - mug.rotation.y) * Math.min(1, dt * 6);
+      if (phoneAlert) {
+        alertTime += dt;
+        const burst = (alertTime % 2.0) < 0.55;
+        alertPulse = 0.5 + 0.5 * Math.sin(alertTime * 10);
+        if (burst) {
+          phone.position.x = 0.58 + Math.sin(alertTime * 68) * 0.0045;
+          phone.position.z = 0.08 + Math.cos(alertTime * 54) * 0.0035;
+          phone.rotation.z = Math.sin(alertTime * 75) * 0.04;
+        } else {
+          phone.position.x = 0.58;
+          phone.position.z = 0.08;
+          phone.rotation.z = 0;
+        }
+        applyPhoneVisuals();
+      }
       clockAcc += dt;
       if (clockAcc >= 1) { clockAcc = 0; blink = !blink; drawLock(blink); }
     },

@@ -66,6 +66,161 @@ async function cargarSqlJs() {
   return sqlJsPromise;
 }
 
+const PARCIAL_SEGUNDOS = 300;
+const CHAT_EXTRAS_KEY = 'campusos_chat_extras_v1';
+
+const REACCIONES_BLOQUE = {
+  1: {
+    de: 'Diego',
+    texto: '¡Buena! Ya dominaste el SELECT. ¿Me pasas un tip para la siguiente? 😅',
+  },
+  2: {
+    de: 'Docente — Aula virtual',
+    texto: 'Correcto. Filtrar con WHERE evita traer filas innecesarias de la tabla.',
+  },
+  3: {
+    de: 'Diego',
+    texto: '¡Ese combo de BETWEEN, LIKE e IN estuvo brutal! Ya casi llegamos al parcial 🔥',
+  },
+  4: {
+    de: 'Docente — Aula virtual',
+    texto: 'Excelente uso de DISTINCT y ORDER BY. Estás listo para el reto del parcial.',
+  },
+  5: {
+    de: 'Diego',
+    texto: '¡Sobreviviste al parcial! Revisa el chat y el correo de Banco Nexus 🎓',
+  },
+};
+
+function formatTiempoMMSS(segundos) {
+  const s = Math.max(0, Math.floor(segundos));
+  const mm = String(Math.floor(s / 60)).padStart(2, '0');
+  const ss = String(s % 60).padStart(2, '0');
+  return `${mm}:${ss}`;
+}
+
+function generarChipsSql(bloque, bdActual) {
+  if (!bloque || (bloque.numero !== 1 && bloque.numero !== 2)) return [];
+  const esperada = bloque.consulta_esperada || '';
+  const tokensEsperados =
+    esperada.match(/'[^']*'|>=|<=|!=|<>|[=><,;*]|\b[a-zA-Z_][a-zA-Z0-9_]*\b|\b\d+(?:\.\d+)?\b/g) || [];
+
+  const tablas = bdActual?.esquema_er?.tablas || [];
+  const fromMatch = esperada.match(/\bFROM\s+([a-zA-Z_][a-zA-Z0-9_]*)/i);
+  const tablaObjetivo = fromMatch
+    ? tablas.find((t) => t.nombre.toLowerCase() === fromMatch[1].toLowerCase())
+    : null;
+
+  const keywordsBase =
+    bloque.numero === 1
+      ? ['SELECT', '*', 'FROM']
+      : ['SELECT', '*', 'FROM', 'WHERE', 'AND', 'OR'];
+
+  const kwSet = new Set(['SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'AS', 'NOT', 'IN', 'IS', 'NULL']);
+  const seen = new Set();
+  const chips = [];
+
+  const pushChip = (token, tipo) => {
+    const clean = String(token).trim();
+    if (!clean) return;
+    const key = clean.toUpperCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    chips.push({ token: clean, tipo });
+  };
+
+  keywordsBase.forEach((kw) => pushChip(kw, 'kw'));
+
+  if (tablaObjetivo) {
+    pushChip(tablaObjetivo.nombre, 'table');
+  }
+  for (const t of tablas) {
+    if (!tablaObjetivo || t.nombre !== tablaObjetivo.nombre) {
+      pushChip(t.nombre, 'table');
+    }
+  }
+
+  for (const tk of tokensEsperados) {
+    if (kwSet.has(tk.toUpperCase())) pushChip(tk.toUpperCase(), 'kw');
+  }
+
+  // Columnas usadas en la consulta esperada + columnas de la tabla objetivo
+  const colNamesTabla = new Set((tablaObjetivo?.columnas || []).map((c) => c.nombre.toLowerCase()));
+  for (const tk of tokensEsperados) {
+    if (colNamesTabla.has(tk.toLowerCase())) {
+      pushChip(tk, 'col');
+    }
+  }
+  for (const c of tablaObjetivo?.columnas || []) {
+    pushChip(c.nombre, 'col');
+  }
+
+  // Operadores y literales de la variante activa
+  for (const tk of tokensEsperados) {
+    if (/^(>=|<=|!=|<>|=|>|<)$/.test(tk)) pushChip(tk, 'op');
+  }
+  if (bloque.numero === 2) {
+    ['=', '>', '<', '>=', '<='].forEach((op) => pushChip(op, 'op'));
+  }
+  for (const tk of tokensEsperados) {
+    if (/^'[^']*'$/.test(tk) || /^\d+(?:\.\d+)?$/.test(tk)) {
+      pushChip(tk, 'lit');
+    }
+  }
+
+  [',', ';'].forEach((p) => pushChip(p, 'punct'));
+  return chips;
+}
+
+function calcularFiltroStats(db, sqlUsuario, bdActual, filasResultado) {
+  if (!db || !sqlUsuario) return null;
+  const sqlSinLiterales = sqlUsuario.replace(/\/\*[\s\S]*?\*\/|--[^\n]*|'(?:''|[^'])*'/g, ' ');
+  const match = sqlSinLiterales.match(/\bFROM\s+["'`]?([a-zA-Z_][a-zA-Z0-9_]*)["'`]?/i);
+  if (!match) return null;
+  const tablas = bdActual?.esquema_er?.tablas || [];
+  const tablaObj = tablas.find((t) => t.nombre.toLowerCase() === match[1].toLowerCase());
+  if (!tablaObj) return null;
+  try {
+    const res = db.exec(`SELECT COUNT(*) FROM "${tablaObj.nombre}";`);
+    const total = Number(res?.[0]?.values?.[0]?.[0] ?? 0);
+    return {
+      tabla: tablaObj.nombre,
+      total,
+      filtradas: Number(filasResultado || 0),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function pushChatReaction(bloque, reaccion) {
+  try {
+    const raw = localStorage.getItem(CHAT_EXTRAS_KEY);
+    const prev = raw ? JSON.parse(raw) : [];
+    const list = Array.isArray(prev) ? prev : [];
+    const yaExiste = list.some((m) => m.bloqueId === bloque.id);
+    const hora = new Date().toLocaleTimeString('es-ES', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+    const msg = {
+      id: `${bloque.id}_${Date.now()}`,
+      bloqueId: bloque.id,
+      bloque: bloque.numero,
+      de: reaccion.de,
+      texto: reaccion.texto,
+      hora,
+    };
+    const next = yaExiste
+      ? list.map((m) => (m.bloqueId === bloque.id ? msg : m))
+      : [...list, msg];
+    localStorage.setItem(CHAT_EXTRAS_KEY, JSON.stringify(next));
+    window.dispatchEvent(new CustomEvent('nexus:campus-chat-msg', { detail: msg }));
+    window.dispatchEvent(new CustomEvent('nexus:chat-nuevo'));
+  } catch { /* ignore */ }
+}
+
 function crearVariantesAleatorias(bloques) {
   const mapa = {};
   for (const b of bloques) {
@@ -75,10 +230,14 @@ function crearVariantesAleatorias(bloques) {
   return mapa;
 }
 
-export default function AcademyApp({ scenario = 1, onGoToNivel2 }) {
+export default function AcademyApp({ scenario = 1, activo = true, onGoToNivel2 }) {
   const basesDatos = nivel1Variantes.bases_datos;
   const tutorRef = useRef(new TutorRL());
   const dbRef = useRef(null);
+  const editorRef = useRef(null);
+  const selloRef = useRef(null);
+  const logroRef = useRef(null);
+  const tiempoAgotadoRef = useRef(false);
 
   const [bdIdx, setBdIdx] = useState(0);
   const [variantesPorBloque, setVariantesPorBloque] = useState(() =>
@@ -110,6 +269,12 @@ export default function AcademyApp({ scenario = 1, onGoToNivel2 }) {
   const [usoPista, setUsoPista] = useState(false);
   const [completados, setCompletados] = useState(() => tutorRef.current.estado.completados);
   const [xp, setXp] = useState(() => tutorRef.current.estado.xp);
+  const [racha, setRacha] = useState(0);
+  const [selloInfo, setSelloInfo] = useState(null);
+  const [logroInfo, setLogroInfo] = useState(null);
+  const [filtroStats, setFiltroStats] = useState(null);
+  const [tiempoParcial, setTiempoParcial] = useState(PARCIAL_SEGUNDOS);
+  const [fxSilenciado, setFxSilenciado] = useState(() => Boolean(window.fx?.estado?.().silenciado));
 
   const bdActual = basesDatos[bdIdx] || basesDatos[0];
   const bloques = bdActual.bloques;
@@ -130,6 +295,9 @@ export default function AcademyApp({ scenario = 1, onGoToNivel2 }) {
   };
 
   const todoCompletado = completados.length >= bloques.length;
+  const esBloqueParcial = bloque.id === 'b5_parcial' || bloque.numero === 5;
+  const parcialCompletado = completados.includes('b5_parcial');
+  const chipsSql = generarChipsSql(bloque, bdActual);
 
   const cargarPreview = (db, nombreTabla) => {
     if (!db || !nombreTabla) return;
@@ -196,6 +364,180 @@ export default function AcademyApp({ scenario = 1, onGoToNivel2 }) {
     }
   }, [tablaPreview, dbReady]);
 
+  // Sincronizar estado de silencio de fx.js
+  useEffect(() => {
+    const onSilencio = (e) => setFxSilenciado(Boolean(e.detail?.silenciado));
+    window.addEventListener('nexus:fx-silencio', onSilencio);
+    return () => window.removeEventListener('nexus:fx-silencio', onSilencio);
+  }, []);
+
+  // Disparar nexus:mision-resuelta después de que Preact monte [data-fx="sello"]
+  useEffect(() => {
+    if (!selloInfo) return;
+    const rafId = requestAnimationFrame(() => {
+      window.dispatchEvent(
+        new CustomEvent('nexus:mision-resuelta', {
+          detail: {
+            id: selloInfo.bloqueId,
+            puntos: selloInfo.puntos,
+            pasos: 1,
+            elemento: selloRef.current,
+          },
+        })
+      );
+    });
+    return () => cancelAnimationFrame(rafId);
+  }, [selloInfo]);
+
+  // Disparar nexus:logro después de que Preact monte [data-fx="logro"]
+  useEffect(() => {
+    if (!logroInfo) return;
+    const rafId = requestAnimationFrame(() => {
+      window.dispatchEvent(
+        new CustomEvent('nexus:logro', {
+          detail: {
+            id: logroInfo.id,
+            nombre: logroInfo.nombre,
+            elemento: logroRef.current,
+          },
+        })
+      );
+    });
+    return () => cancelAnimationFrame(rafId);
+  }, [logroInfo]);
+
+  // R4: Reiniciar reloj al entrar al Bloque 5 o cambiar BD
+  useEffect(() => {
+    if (esBloqueParcial && !parcialCompletado) {
+      setTiempoParcial(PARCIAL_SEGUNDOS);
+      tiempoAgotadoRef.current = false;
+    }
+  }, [esBloqueParcial, parcialCompletado, bdIdx]);
+
+  // R4: Temporizador descendente en Bloque 5
+  useEffect(() => {
+    if (!activo || scenario !== 1 || !esBloqueParcial || parcialCompletado || !dbReady) return;
+    const id = setInterval(() => {
+      setTiempoParcial((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [activo, scenario, esBloqueParcial, parcialCompletado, dbReady]);
+
+  // R4: Reinicio limpio al llegar a 00:00
+  useEffect(() => {
+    if (tiempoParcial !== 0) {
+      tiempoAgotadoRef.current = false;
+      return;
+    }
+    if (!activo || scenario !== 1 || !esBloqueParcial || parcialCompletado) return;
+    if (tiempoAgotadoRef.current) return;
+    tiempoAgotadoRef.current = true;
+
+    setSql('');
+    setResultado(null);
+    setFiltroStats(null);
+    setUsoPista(false);
+    setRacha(0);
+    setSelloInfo(null);
+    tutorRef.current.resetearBloque('b5_parcial');
+    setTutorMsg({
+      estadoVisual: 'esperando',
+      mensaje:
+        '⏱️ Tiempo agotado (00:00). Se reinició tu intento del Parcial. ¡Respira y vuelve a intentarlo!',
+      ejemploGuiado: null,
+      plantilla: null,
+    });
+    window.fx?.play?.('error');
+    window.dispatchEvent(
+      new CustomEvent('nexus:toast', {
+        detail: {
+          texto: '⏱️ Tiempo del parcial agotado (00:00). Intento reiniciado.',
+          tipo: 'error',
+        },
+      })
+    );
+    setTiempoParcial(PARCIAL_SEGUNDOS);
+  }, [activo, scenario, esBloqueParcial, parcialCompletado, tiempoParcial]);
+
+  // R4: Ambiente suave de tensión académica en Bloque 5 (sin alterar window.fx.estado().ambiente)
+  useEffect(() => {
+    if (!activo || scenario !== 1 || !esBloqueParcial || parcialCompletado || !dbReady || fxSilenciado) return;
+    const AC = typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext);
+    if (!AC) return;
+
+    let audioCtx = null;
+    let tickId = null;
+    try {
+      audioCtx = new AC({ latencyHint: 'interactive' });
+      const volBase = Math.max(0.15, Number(window.fx?.estado?.().volumen ?? 0.7));
+      const masterGain = audioCtx.createGain();
+      masterGain.gain.value = 0.0001;
+      masterGain.connect(audioCtx.destination);
+
+      const lp = audioCtx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.value = 320;
+      lp.connect(masterGain);
+
+      // Pad armónico suave en La menor (A2 + E3) a ganancia muy baja
+      const osc1 = audioCtx.createOscillator();
+      osc1.type = 'sine';
+      osc1.frequency.value = 110;
+      const g1 = audioCtx.createGain();
+      g1.gain.value = 0.018 * volBase;
+      osc1.connect(g1);
+      g1.connect(lp);
+
+      const osc2 = audioCtx.createOscillator();
+      osc2.type = 'triangle';
+      osc2.frequency.value = 164.81;
+      const g2 = audioCtx.createGain();
+      g2.gain.value = 0.008 * volBase;
+      osc2.connect(g2);
+      g2.connect(lp);
+
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(() => {});
+      }
+      osc1.start();
+      osc2.start();
+      masterGain.gain.setTargetAtTime(1, audioCtx.currentTime, 0.8);
+
+      // Pulso suave tipo reloj académico cada 2s
+      tickId = setInterval(() => {
+        if (!audioCtx || audioCtx.state !== 'running') return;
+        const t = audioCtx.currentTime;
+        const tickOsc = audioCtx.createOscillator();
+        const tickGain = audioCtx.createGain();
+        tickOsc.type = 'sine';
+        tickOsc.frequency.setValueAtTime(520, t);
+        tickOsc.frequency.exponentialRampToValueAtTime(340, t + 0.035);
+        tickGain.gain.setValueAtTime(0.0001, t);
+        tickGain.gain.linearRampToValueAtTime(0.016 * volBase, t + 0.005);
+        tickGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
+        tickOsc.connect(tickGain);
+        tickGain.connect(masterGain);
+        tickOsc.start(t);
+        tickOsc.stop(t + 0.08);
+      }, 2000);
+
+      return () => {
+        if (tickId) clearInterval(tickId);
+        try {
+          masterGain.gain.setTargetAtTime(0.0001, audioCtx.currentTime, 0.15);
+        } catch { /* ignore */ }
+        setTimeout(() => {
+          try { osc1.stop(); } catch { /* ignore */ }
+          try { osc2.stop(); } catch { /* ignore */ }
+          try { audioCtx.close(); } catch { /* ignore */ }
+        }, 250);
+      };
+    } catch {
+      if (tickId) clearInterval(tickId);
+      try { audioCtx?.close(); } catch { /* ignore */ }
+    }
+  }, [activo, scenario, esBloqueParcial, parcialCompletado, dbReady, fxSilenciado]);
+
   const seleccionarBd = (nuevoIdx) => {
     const idxValido = ((nuevoIdx % basesDatos.length) + basesDatos.length) % basesDatos.length;
     const nuevaBd = basesDatos[idxValido];
@@ -207,6 +549,9 @@ export default function AcademyApp({ scenario = 1, onGoToNivel2 }) {
     setQuizOk(false);
     setUsoPista(false);
     setResultado(null);
+    setFiltroStats(null);
+    setSelloInfo(null);
+    setLogroInfo(null);
     setSql(primeraTabla ? `SELECT * FROM ${primeraTabla} LIMIT 5;` : '');
     setTutorMsg({
       estadoVisual: 'esperando',
@@ -232,6 +577,8 @@ export default function AcademyApp({ scenario = 1, onGoToNivel2 }) {
     setVariantesPorBloque((prev) => ({ ...prev, [bloqueBase.id]: siguiente }));
     setUsoPista(false);
     setResultado(null);
+    setFiltroStats(null);
+    setSelloInfo(null);
     setTutorMsg({
       estadoVisual: 'esperando',
       mensaje: `Variante ${siguiente + 1}/${variantesDisponibles.length} activada para el Bloque ${bloqueBase.numero}.`,
@@ -247,7 +594,14 @@ export default function AcademyApp({ scenario = 1, onGoToNivel2 }) {
     setQuizOk(false);
     setUsoPista(false);
     setResultado(null);
+    setFiltroStats(null);
+    setSelloInfo(null);
+    setLogroInfo(null);
     setSql('');
+    if (bloques[idx]?.id === 'b5_parcial' || bloques[idx]?.numero === 5) {
+      setTiempoParcial(PARCIAL_SEGUNDOS);
+      tiempoAgotadoRef.current = false;
+    }
     setTutorMsg({
       estadoVisual: 'esperando',
       mensaje: `Bloque ${bloques[idx].numero}: ${bloques[idx].titulo}. Revisa el enunciado y prueba tu consulta.`,
@@ -275,6 +629,12 @@ export default function AcademyApp({ scenario = 1, onGoToNivel2 }) {
         columnas: [],
         filas: [],
       });
+      setFiltroStats(null);
+      if (window.fx?.animar) {
+        window.fx.animar('shake', editorRef);
+      } else {
+        window.fx?.play?.('error');
+      }
       return;
     }
 
@@ -284,29 +644,80 @@ export default function AcademyApp({ scenario = 1, onGoToNivel2 }) {
       setResultado(val);
       setTabDerecha('resultados');
 
+      if (!val.errorSql) {
+        setFiltroStats(calcularFiltroStats(dbRef.current, sql, bdActual, val.filas?.length || 0));
+      } else {
+        setFiltroStats(null);
+      }
+
       if (val.ok) {
-        window.fx?.play?.('exito');
+        const yaEstaba = tutorRef.current.estado.completados.includes(bloque.id);
         const resTutor = tutorRef.current.registrarAcierto(bloque, usoPista);
         setCompletados([...tutorRef.current.estado.completados]);
         setXp(tutorRef.current.estado.xp);
+
+        let nextRacha = racha;
+        if (!yaEstaba) {
+          nextRacha = racha + 1;
+          setRacha(nextRacha);
+        }
+
+        const nowKey = Date.now();
+        setSelloInfo({
+          key: nowKey,
+          bloqueId: bloque.id,
+          puntos: resTutor.xpGanado || bloque.xp || 100,
+        });
+        if (!yaEstaba && bloque.insignia) {
+          setLogroInfo({
+            key: nowKey + 1,
+            id: bloque.id,
+            nombre: bloque.insignia,
+          });
+        }
+
         setTutorMsg({
           estadoVisual: 'exito',
           mensaje: resTutor.mensaje,
           ejemploGuiado: null,
           plantilla: null,
         });
+
+        const reaccion = REACCIONES_BLOQUE[bloque.numero] || {
+          de: 'Diego',
+          texto: '¡Excelente consulta! Seguimos avanzando.',
+        };
+        const comboTexto = nextRacha >= 2 ? ` · 🔥 Combo x${nextRacha}` : '';
         window.dispatchEvent(
           new CustomEvent('nexus:toast', {
-            detail: { texto: `✅ Bloque ${bloque.numero} completado`, tipo: 'exito' },
+            detail: {
+              texto: `✅ Bloque ${bloque.numero}${comboTexto} · ${reaccion.de}: "${reaccion.texto}"`,
+              tipo: 'exito',
+            },
           })
         );
+        pushChatReaction(bloque, reaccion);
       } else {
-        window.fx?.play?.('error');
+        setRacha(0);
+        setSelloInfo(null);
+        if (window.fx?.animar) {
+          window.fx.animar('shake', editorRef);
+        } else {
+          window.fx?.play?.('error');
+        }
         const ayuda = tutorRef.current.registrarError(bloque, val);
         setTutorMsg(ayuda);
       }
     } catch (err) {
       console.error('[AcademyApp] Error al ejecutar consulta:', err);
+      setRacha(0);
+      setSelloInfo(null);
+      setFiltroStats(null);
+      if (window.fx?.animar) {
+        window.fx.animar('shake', editorRef);
+      } else {
+        window.fx?.play?.('error');
+      }
       setResultado({
         ok: false,
         errorSql: err?.message || 'Error inesperado al ejecutar la consulta SQL.',
@@ -320,7 +731,28 @@ export default function AcademyApp({ scenario = 1, onGoToNivel2 }) {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
       e.preventDefault();
       ejecutar();
+      return;
     }
+    const ignorar = ['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Tab', 'Escape'];
+    if (!ignorar.includes(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      window.fx?.play?.('tecla');
+    }
+  };
+
+  const insertarChipSql = (token) => {
+    window.fx?.play?.('tecla');
+    setSql((prev) => {
+      const sinEspaciosFinal = (prev || '').replace(/\s+$/, '');
+      if (!sinEspaciosFinal) return token;
+      if (token === ',' || token === ';') {
+        return `${sinEspaciosFinal}${token} `;
+      }
+      if (sinEspaciosFinal.endsWith('(')) {
+        return `${sinEspaciosFinal}${token}`;
+      }
+      return `${sinEspaciosFinal} ${token}`;
+    });
+    editorRef.current?.focus?.();
   };
 
   const pedirPista = () => {
@@ -397,6 +829,31 @@ export default function AcademyApp({ scenario = 1, onGoToNivel2 }) {
           <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono">
             {completados.length}/{bloques.length} · {xp} XP
           </span>
+          {racha >= 1 && (
+            <span
+              class={`px-2 py-0.5 rounded font-mono font-semibold border ${
+                racha >= 2
+                  ? 'bg-orange-500/25 text-orange-200 border-orange-400/50'
+                  : 'bg-slate-800 text-slate-300 border-white/10'
+              }`}
+            >
+              🔥 {racha >= 2 ? `Combo x${racha}` : `Racha x${racha}`}
+            </span>
+          )}
+          {esBloqueParcial && !parcialCompletado && (
+            <span
+              class={`px-2 py-0.5 rounded font-mono font-bold border ${
+                tiempoParcial <= 15
+                  ? 'bg-red-500/25 text-red-300 border-red-400/60 animate-pulse'
+                  : tiempoParcial <= 60
+                  ? 'bg-amber-500/25 text-amber-200 border-amber-400/50'
+                  : 'bg-rose-950/60 text-rose-200 border-rose-400/40'
+              }`}
+              title="Tiempo restante del Parcial (al llegar a 00:00 se reinicia el intento)"
+            >
+              ⏱️ {formatTiempoMMSS(tiempoParcial)}
+            </span>
+          )}
         </div>
       </div>
 
@@ -561,6 +1018,7 @@ export default function AcademyApp({ scenario = 1, onGoToNivel2 }) {
             </div>
 
             <textarea
+              ref={editorRef}
               value={sql}
               onInput={(e) => setSql(e.target.value)}
               onKeyDown={onEditorKeyDown}
@@ -568,6 +1026,41 @@ export default function AcademyApp({ scenario = 1, onGoToNivel2 }) {
               rows={5}
               class="w-full p-2.5 rounded bg-black/50 border border-white/10 font-mono text-xs text-emerald-300 focus:outline-none focus:border-blue-400 resize-none"
             />
+
+            {/* R3: Fichas/chips SQL clicables en Bloques 1 y 2 */}
+            {chipsSql.length > 0 && (
+              <div class="p-2 rounded bg-slate-900/75 border border-white/10 space-y-1.5">
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">
+                    Fichas SQL rápidas (clic para insertar · o escribe con teclado)
+                  </span>
+                </div>
+                <div class="flex flex-wrap gap-1.5">
+                  {chipsSql.map((chip) => {
+                    const cls =
+                      chip.tipo === 'kw'
+                        ? 'bg-blue-500/20 hover:bg-blue-500/35 border-blue-400/40 text-blue-200'
+                        : chip.tipo === 'table'
+                        ? 'bg-amber-500/20 hover:bg-amber-500/35 border-amber-400/40 text-amber-200'
+                        : chip.tipo === 'col'
+                        ? 'bg-emerald-500/20 hover:bg-emerald-500/35 border-emerald-400/40 text-emerald-200'
+                        : chip.tipo === 'op'
+                        ? 'bg-purple-500/20 hover:bg-purple-500/35 border-purple-400/40 text-purple-200'
+                        : 'bg-slate-800 hover:bg-slate-700 border-white/15 text-slate-200';
+                    return (
+                      <button
+                        key={chip.token}
+                        type="button"
+                        onClick={() => insertarChipSql(chip.token)}
+                        class={`px-2 py-1 rounded border font-mono text-[11px] transition-colors ${cls}`}
+                      >
+                        {chip.token}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             <div class="flex items-center gap-2 flex-wrap">
               <button
@@ -579,11 +1072,34 @@ export default function AcademyApp({ scenario = 1, onGoToNivel2 }) {
                 ▶ Ejecutar (Ctrl+Enter)
               </button>
               <button
-                onClick={() => setSql('')}
+                onClick={() => {
+                  setSql('');
+                  setFiltroStats(null);
+                }}
                 class="px-2.5 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300"
               >
                 Limpiar
               </button>
+              {selloInfo && (
+                <span
+                  key={selloInfo.key}
+                  data-fx="sello"
+                  ref={selloRef}
+                  class="px-2.5 py-0.5 rounded border-2 border-emerald-400 bg-emerald-500/20 text-emerald-200 font-mono font-extrabold text-[11px] tracking-wider uppercase -rotate-2 shadow"
+                >
+                  APROBADO
+                </span>
+              )}
+              {logroInfo && (
+                <span
+                  key={logroInfo.key}
+                  data-fx="logro"
+                  ref={logroRef}
+                  class="px-2.5 py-0.5 rounded-full border border-amber-400/60 bg-amber-500/20 text-amber-200 font-semibold text-[11px]"
+                >
+                  🏆 {logroInfo.nombre}
+                </span>
+              )}
               {resultado && (
                 <span class={`text-xs font-medium ${resultado.ok ? 'text-emerald-400' : 'text-red-400'}`}>
                   {resultado.errorSql ? `Error: ${resultado.errorSql}` : resultado.detalle}
@@ -613,6 +1129,24 @@ export default function AcademyApp({ scenario = 1, onGoToNivel2 }) {
                   Base de datos ({bdActual.nombre})
                 </button>
               </div>
+              {tabDerecha === 'resultados' && filtroStats && (
+                <div class="flex items-center gap-2 mb-1 px-2 py-0.5 rounded bg-slate-800/80 border border-white/10 text-[11px] font-mono">
+                  <span class="text-sky-300 font-semibold">
+                    {filtroStats.tabla}: {filtroStats.total} filas → {filtroStats.filtradas} filas
+                  </span>
+                  <div class="w-16 h-1.5 rounded-full bg-slate-950 overflow-hidden">
+                    <div
+                      class="h-full bg-gradient-to-r from-sky-400 to-emerald-400 transition-all duration-300"
+                      style={{
+                        width: `${Math.min(
+                          100,
+                          Math.round((filtroStats.filtradas / Math.max(1, filtroStats.total)) * 100)
+                        )}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
               {tabDerecha === 'bd' && (
                 <select
                   value={tablaPreview}

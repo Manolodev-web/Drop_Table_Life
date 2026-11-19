@@ -199,6 +199,13 @@ export class TutorRL {
     } catch (_) { /* ignore */ }
   }
 
+  resetearBloque(bloqueId) {
+    if (!bloqueId) return;
+    if (!this.estado.intentosBloque) this.estado.intentosBloque = {};
+    this.estado.intentosBloque[bloqueId] = 0;
+    this._guardar();
+  }
+
   registrarError(bloque, validacion) {
     const tag = bloque.clausula_tag || 'select';
     const prev = this.estado.tags[tag] || { dominio: 0.5, errores: 0, aciertos: 0 };

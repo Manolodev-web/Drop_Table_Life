@@ -29,7 +29,7 @@ function Fallback2D() {
   const [par, setPar] = useState({ x: 0, y: 0 });
   const enter = () => {
     window.fx?.play?.('exito');
-    window.dispatchEvent(new CustomEvent('nexus:monitor-click', { detail: { scenario: 1 } }));
+    window.dispatchEvent(new CustomEvent('nexus:monitor-click', { detail: { scenario: 1, duracion: 600 } }));
   };
   return (
     <div
@@ -110,6 +110,7 @@ export default function DeskScene({ active }) {
   const [ready, setReady] = useState(false);
   const [webglOk, setWebglOk] = useState(true);
   const [menuOpen, setMenuOpen] = useState(true);
+  const menuOpenRef = useRef(true);
   const [started, setStarted] = useState(false);
   const [chaptersOpen, setChaptersOpen] = useState(false);
   const scenarioRef = useRef(1);
@@ -123,6 +124,12 @@ export default function DeskScene({ active }) {
   const [phoneUnlocked, setPhoneUnlocked] = useState(false);
   const [phoneReply, setPhoneReply] = useState(null);
   const msgContainerRef = useRef(null);
+  const hookFiredRef = useRef(false);
+  const ringTimerRef = useRef(null);
+  const mugAchievementRef = useRef(false);
+  const mugLogroRef = useRef(null);
+  const [mugLogroVisible, setMugLogroVisible] = useState(false);
+  const [mugLogroPendiente, setMugLogroPendiente] = useState(false);
 
   // Cuaderno (5 temas SQL + paginación)
   const [notebookOpen, setNotebookOpen] = useState(false);
@@ -150,9 +157,17 @@ export default function DeskScene({ active }) {
       ctrl.current = createEngine(mountRef.current, {
         onPrompt: setPromptTag,
         onTransition: setTransitioning,
-        onEscape: () => setMenuOpen(true),
+        onEscape: () => {
+          menuOpenRef.current = true;
+          setMenuOpen(true);
+        },
         onHint: (text) => setToast({ text, id: Date.now() }),
         onOpenPhone: () => {
+          if (ringTimerRef.current) {
+            clearTimeout(ringTimerRef.current);
+            ringTimerRef.current = null;
+          }
+          ctrl.current?.setPhoneAlert?.(false);
           setNotebookOpen(false);
           setPhoneOpen(true);
           setPhoneUnlocked(false);
@@ -162,13 +177,55 @@ export default function DeskScene({ active }) {
         onOpenNotebook: () => {
           setPhoneOpen(false);
           setNotebookOpen(true);
-          window.fx?.play?.('tecla');
+          window.fx?.play?.('pagina');
         },
-        onEnterMonitor: () => {
+        onMugClick: (open, clicks, defaultHint) => {
+          window.fx?.play?.('tecla');
+          if (clicks === 3) {
+            setToast({
+              text: '☕ ¡3 vueltas al café! Broma del DBA: la cafeína no arregla un DELETE sin WHERE.',
+              id: Date.now(),
+            });
+            if (!mugAchievementRef.current) {
+              mugAchievementRef.current = true;
+              try {
+                const raw = localStorage.getItem('campusos_secretos_v1');
+                const sec = raw ? JSON.parse(raw) : {};
+                sec.curioso_cafe = true;
+                localStorage.setItem('campusos_secretos_v1', JSON.stringify(sec));
+              } catch { /* ignore */ }
+              setMugLogroVisible(true);
+              setMugLogroPendiente(true);
+            }
+            return;
+          }
+          if (clicks > 3 && clicks % 3 === 0) {
+            setToast({
+              text: `☕ Vuelta #${clicks}: ¡El café sigue caliente, pero el parcial no se resuelve solo!`,
+              id: Date.now(),
+            });
+            return;
+          }
+          setToast({
+            text: open
+              ? (defaultHint || '☕ Nota bajo la taza: en CampusOS la clave está en tus apuntes (SELECTme). En Banco Nexus usa «nexus».')
+              : '☕ La taza vuelve a su posición.',
+            id: Date.now(),
+          });
+        },
+        onEnterMonitor: (duracion = 1600) => {
+          if (ringTimerRef.current) {
+            clearTimeout(ringTimerRef.current);
+            ringTimerRef.current = null;
+          }
           setPhoneOpen(false);
           setNotebookOpen(false);
           window.fx?.play?.('exito');
-          window.dispatchEvent(new CustomEvent('nexus:monitor-click', { detail: { scenario: scenarioRef.current } }));
+          window.dispatchEvent(
+            new CustomEvent('nexus:monitor-click', {
+              detail: { scenario: scenarioRef.current, duracion },
+            })
+          );
         },
       });
       setReady(true);
@@ -176,7 +233,14 @@ export default function DeskScene({ active }) {
       console.warn('[Escena3D] WebGL falló, activando Plan B:', err);
       setWebglOk(false);
     }
-    return () => ctrl.current?.dispose();
+    return () => {
+      if (ringTimerRef.current) {
+        clearTimeout(ringTimerRef.current);
+        ringTimerRef.current = null;
+      }
+      window.fx?.ambiente?.(null);
+      ctrl.current?.dispose();
+    };
   }, []);
 
   useEffect(() => {
@@ -184,6 +248,38 @@ export default function DeskScene({ active }) {
     ctrl.current?.setScenario(scenario);
     window.dispatchEvent(new CustomEvent('nexus:scenario-change', { detail: { scenario } }));
   }, [scenario, ready]);
+  useEffect(() => {
+    menuOpenRef.current = menuOpen;
+  }, [menuOpen]);
+  useEffect(() => {
+    if (!mugLogroPendiente || !mugLogroVisible || !active || !mugLogroRef.current) return;
+    const rafId = requestAnimationFrame(() => {
+      if (!mugLogroRef.current) return;
+      window.dispatchEvent(
+        new CustomEvent('nexus:logro', {
+          detail: {
+            id: 'curioso_cafe',
+            nombre: 'Catador SQL',
+            elemento: mugLogroRef.current,
+          },
+        })
+      );
+      setMugLogroPendiente(false);
+    });
+    return () => cancelAnimationFrame(rafId);
+  }, [mugLogroPendiente, mugLogroVisible, active]);
+  useEffect(() => {
+    window.fx?.ambiente?.(menuOpen ? null : scenario);
+  }, [scenario, menuOpen, ready]);
+  useEffect(() => {
+    const onOsCerrar = () => {
+      window.fx?.ambiente?.(null);
+      menuOpenRef.current = true;
+      setMenuOpen(true);
+    };
+    window.addEventListener('nexus:os-cerrar', onOsCerrar);
+    return () => window.removeEventListener('nexus:os-cerrar', onOsCerrar);
+  }, []);
   useEffect(() => { ctrl.current?.setLookEnabled(started && !menuOpen); }, [started, menuOpen, ready]);
   useEffect(() => { ctrl.current?.setModalOpen?.(phoneOpen || notebookOpen); }, [phoneOpen, notebookOpen, ready]);
   useEffect(() => { ctrl.current?.setActive(active); }, [active, ready]);
@@ -211,9 +307,26 @@ export default function DeskScene({ active }) {
 
   const sc = SCENARIOS[scenario];
   const start = () => {
+    menuOpenRef.current = false;
     setStarted(true); setMenuOpen(false);
     window.fx?.play?.('tecla');
     setToast({ text: '🖱 Mueve el ratón para mirar. Haz clic en el monitor, móvil, cuaderno o taza del escritorio.', id: Date.now() });
+    if (!hookFiredRef.current) {
+      hookFiredRef.current = true;
+      ringTimerRef.current = setTimeout(() => {
+        ringTimerRef.current = null;
+        if (menuOpenRef.current) {
+          hookFiredRef.current = false;
+          return;
+        }
+        ctrl.current?.setPhoneAlert?.(true);
+        window.fx?.play?.('ring');
+        setToast({
+          text: '📱 Diego: "¿Alguien entendió lo que dejó el docente? Revisa tu móvil."',
+          id: Date.now(),
+        });
+      }, 2000);
+    }
   };
 
   // Datos del celular desde content/nivel1.json
@@ -295,10 +408,23 @@ export default function DeskScene({ active }) {
 
           {/* Botón discreto único en esquina superior izquierda: solo ☰ Menú */}
           {started && !menuOpen && !transitioning && (
-            <button onClick={() => setMenuOpen(true)}
+            <button onClick={() => { menuOpenRef.current = true; setMenuOpen(true); }}
               class="absolute top-4 left-4 z-20 px-3 py-1.5 rounded-md bg-black/50 border border-nexus-border backdrop-blur text-xs text-nexus-muted hover:text-white transition-colors">
               ☰ Menú · <span class="text-amber-400/90">{sc.nombre} — {sc.lugar}</span>
             </button>
+          )}
+
+          {/* Badge de logro oculto de la taza (Catador SQL) */}
+          {mugLogroVisible && !transitioning && (
+            <div class="absolute top-4 right-4 z-20 pointer-events-none">
+              <span
+                data-fx="logro"
+                ref={mugLogroRef}
+                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-amber-400/60 bg-slate-950/85 backdrop-blur text-amber-200 text-xs font-semibold shadow-lg"
+              >
+                🏆 Logro oculto: Catador SQL
+              </span>
+            </div>
           )}
 
           {/* === MODAL CELULAR · iPhone (Lock Screen 10:20 → Chat oscuro WhatsApp/iMessage) === */}
@@ -572,7 +698,7 @@ export default function DeskScene({ active }) {
                               onClick={() => {
                                 closePhone();
                                 window.fx?.play?.('exito');
-                                window.dispatchEvent(new CustomEvent('nexus:monitor-click', { detail: { scenario: scenarioRef.current } }));
+                                window.dispatchEvent(new CustomEvent('nexus:monitor-click', { detail: { scenario: scenarioRef.current, duracion: 1000 } }));
                               }}
                               class="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-sm transition-colors shadow-lg shadow-emerald-950/40"
                             >
@@ -667,7 +793,7 @@ export default function DeskScene({ active }) {
                   {/* Paginación */}
                   <div class="px-5 py-3 bg-[#f5efe0] border-t border-amber-200/90 flex items-center justify-between gap-3">
                     <button
-                      onClick={() => { setNbPage((p) => Math.max(0, p - 1)); window.fx?.play?.('tecla'); }}
+                      onClick={() => { setNbPage((p) => Math.max(0, p - 1)); window.fx?.play?.('pagina'); }}
                       disabled={nbPage === 0}
                       class="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-medium disabled:opacity-35 transition-colors"
                     >
@@ -678,7 +804,10 @@ export default function DeskScene({ active }) {
                       {paginasCuaderno.map((p, idx) => (
                         <button
                           key={p.id}
-                          onClick={() => { setNbPage(idx); window.fx?.play?.('tecla'); }}
+                          onClick={() => {
+                            if (idx !== nbPage) window.fx?.play?.('pagina');
+                            setNbPage(idx);
+                          }}
                           class={`w-6 h-6 rounded-full text-[11px] font-mono font-semibold transition-colors ${
                             nbPage === idx
                               ? 'bg-blue-700 text-white shadow'
@@ -692,7 +821,7 @@ export default function DeskScene({ active }) {
                     </div>
 
                     <button
-                      onClick={() => { setNbPage((p) => Math.min(paginasCuaderno.length - 1, p + 1)); window.fx?.play?.('tecla'); }}
+                      onClick={() => { setNbPage((p) => Math.min(paginasCuaderno.length - 1, p + 1)); window.fx?.play?.('pagina'); }}
                       disabled={nbPage === paginasCuaderno.length - 1}
                       class="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-medium disabled:opacity-35 transition-colors"
                     >

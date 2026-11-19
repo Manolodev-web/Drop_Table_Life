@@ -4,6 +4,8 @@ import { buildDesk, buildEnvironment, disposeObject, disposeSharedTextures } fro
 
 const BASE_POS = new THREE.Vector3(0, 1.32, 1.85);
 const BASE_LOOK = new THREE.Vector3(0, 1.1, -0.15);
+const ENTER_DUR_S = 1.6;
+const EXIT_DUR_S = 1.2;
 const easeInOutCubic = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
 
 // Etiquetas de prompt por objeto interactivo
@@ -72,17 +74,17 @@ export function createEngine(container, cb) {
     cb.onTransition?.(true);
     cb.onPrompt?.(null);
     const end = desk.screenCenter.clone().add(new THREE.Vector3(0, 0, 0.28));
-    startTween(end, desk.screenCenter, 36, 1.6, () => {
+    startTween(end, desk.screenCenter, 36, ENTER_DUR_S, () => {
       mode = 'inside';
       cb.onTransition?.(false);
-      cb.onEnterMonitor?.();
+      cb.onEnterMonitor?.(ENTER_DUR_S * 1000);
     });
   }
 
   function returnToDesk() {
     mode = 'zoom-out';
     cb.onTransition?.(true);
-    startTween(BASE_POS, BASE_LOOK, 50, 1.2, () => {
+    startTween(BASE_POS, BASE_LOOK, 50, EXIT_DUR_S, () => {
       mode = 'look';
       dolly = BASE_POS.z;
       curLook.copy(BASE_LOOK);
@@ -125,11 +127,16 @@ export function createEngine(container, cb) {
     if (tag === 'notebook') { cb.onOpenNotebook?.(); return; }
     if (tag === 'mug') {
       const open = desk.toggleMug();
-      cb.onHint?.(
-        open
-          ? (target.userData.hint || '☕ Nota bajo la taza: en CampusOS la clave está en tus apuntes (SELECTme). En Banco Nexus usa «nexus».')
-          : '☕ La taza vuelve a su posición.'
-      );
+      const clicks = desk.mugClicks || 0;
+      if (cb.onMugClick) {
+        cb.onMugClick(open, clicks, target.userData.hint);
+      } else {
+        cb.onHint?.(
+          open
+            ? (target.userData.hint || '☕ Nota bajo la taza: en CampusOS la clave está en tus apuntes (SELECTme). En Banco Nexus usa «nexus».')
+            : '☕ La taza vuelve a su posición.'
+        );
+      }
       return;
     }
     if (target.userData.hint) cb.onHint?.(target.userData.hint);
@@ -241,6 +248,9 @@ export function createEngine(container, cb) {
 
   return {
     setScenario,
+    setPhoneAlert(v) {
+      desk.setPhoneAlert?.(v);
+    },
     setModalOpen(v) {
       modalOpen = !!v;
       if (modalOpen) {

@@ -42,7 +42,7 @@ function getInitialCampusEsquema() {
 
 export default function TopBar({ scenario = 1, onVolverMesa, onLock, onCloseActive }) {
   const [clockText, setClockText] = useState('');
-  const [muted, setMuted] = useState(false);
+  const [muted, setMuted] = useState(() => Boolean(window.fx?.estado?.().silenciado));
   const [openMenu, setOpenMenu] = useState(null);
   const [acto, setActoState] = useState(getActoActual());
   const [campusEsquema, setCampusEsquema] = useState(getInitialCampusEsquema);
@@ -75,11 +75,16 @@ export default function TopBar({ scenario = 1, onVolverMesa, onLock, onCloseActi
         });
       }
     };
+    const onFxSilencio = (e) => {
+      setMuted(Boolean(e.detail?.silenciado));
+    };
     window.addEventListener('nexus:acto-cambio', onActo);
     window.addEventListener('nexus:bd-cambio', onBdCambio);
+    window.addEventListener('nexus:fx-silencio', onFxSilencio);
     return () => {
       window.removeEventListener('nexus:acto-cambio', onActo);
       window.removeEventListener('nexus:bd-cambio', onBdCambio);
+      window.removeEventListener('nexus:fx-silencio', onFxSilencio);
     };
   }, []);
 
@@ -89,11 +94,8 @@ export default function TopBar({ scenario = 1, onVolverMesa, onLock, onCloseActi
   };
 
   const toggleMute = () => {
-    setMuted((m) => {
-      const next = !m;
-      window.fx?.silenciar?.(next);
-      return next;
-    });
+    const next = window.fx?.silenciar ? window.fx.silenciar() : !muted;
+    setMuted(Boolean(next));
   };
 
   const openApp = (appId) => {

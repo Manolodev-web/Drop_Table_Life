@@ -1,5 +1,5 @@
 // web/src/App.jsx
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import DeskScene from './scene/DeskScene.jsx';
 import LockScreen from './components/LockScreen.jsx';
 import TopBar from './components/TopBar.jsx';
@@ -24,7 +24,27 @@ const TITLES = {
   notes: 'Apuntes de Base de Datos',
   rl: 'Progreso y Tutor RL',
   github: 'GitHub / PRs',
+  secret_file: 'NO_ABRIR.txt',
 };
+
+const SECRETOS_STORAGE_KEY = 'campusos_secretos_v1';
+
+function leerSecretos() {
+  try {
+    const raw = localStorage.getItem(SECRETOS_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function guardarSecretos(secretos) {
+  try {
+    localStorage.setItem(SECRETOS_STORAGE_KEY, JSON.stringify(secretos));
+  } catch { /* ignore */ }
+}
 
 const PARCIAL_BLOQUES = [
   { num: 1, id: 'b1_select', label: 'Fundamentos y SELECT' },
@@ -200,6 +220,39 @@ function FolderIcon({ onOpen }) {
   );
 }
 
+/* -------------------- Widget: archivo secreto NO_ABRIR.txt -------------------- */
+function SecretFileIcon({ onOpen }) {
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      onDblClick={onOpen}
+      class="flex flex-col items-center gap-1.5 group pointer-events-auto select-none p-2 rounded-2xl hover:bg-white/[0.07] active:bg-white/[0.12] transition-colors focus:outline-none"
+      title="Abrir NO_ABRIR.txt"
+    >
+      <div class="relative w-12 h-14 transition-transform duration-200 group-hover:scale-105 group-active:scale-95 drop-shadow-[0_10px_18px_rgba(0,0,0,0.5)]">
+        <svg viewBox="0 0 48 58" class="w-full h-full" aria-hidden="true">
+          <path
+            d="M6 4 H32 L42 14 V52 C42 54.2 40.2 56 38 56 H10 C7.8 56 6 54.2 6 52 V4 Z"
+            fill="#1e293b"
+            stroke="#f59e0b"
+            stroke-opacity="0.55"
+            stroke-width="1.5"
+          />
+          <path d="M32 4 V14 H42 Z" fill="#334155" />
+          <rect x="12" y="22" width="24" height="3" rx="1.5" fill="#94a3b8" />
+          <rect x="12" y="29" width="20" height="3" rx="1.5" fill="#64748b" />
+          <rect x="12" y="36" width="22" height="3" rx="1.5" fill="#64748b" />
+          <rect x="12" y="44" width="16" height="4" rx="2" fill="#f59e0b" fill-opacity="0.85" />
+        </svg>
+      </div>
+      <span class="text-[11px] font-mono text-amber-200/95 font-medium tracking-[-0.01em] px-2 py-0.5 rounded-md bg-black/45 group-hover:bg-amber-500/80 group-hover:text-black transition-colors drop-shadow">
+        NO_ABRIR.txt
+      </span>
+    </button>
+  );
+}
+
 /* -------------------- App -------------------- */
 export default function App() {
   const [view, setView] = useState('mesa');
@@ -213,6 +266,9 @@ export default function App() {
   const [toasts, setToasts] = useState([]);
   const [badges, setBadges] = useState({ chat: 3, mail: 1 });
   const [completadosParcial, setCompletadosParcial] = useState(leerCompletadosTutor);
+  const [secretos, setSecretos] = useState(leerSecretos);
+  const [curiosoPendienteFx, setCuriosoPendienteFx] = useState(false);
+  const curiosoRef = useRef(null);
 
   // Contrato: Escena 3D → Interfaz
   useEffect(() => {
@@ -247,6 +303,25 @@ export default function App() {
       window.removeEventListener('nexus:toast', syncProgreso);
     };
   }, []);
+
+  // Disparar FX de logro oculto "Curioso" después de montar el nodo en DOM
+  useEffect(() => {
+    if (!curiosoPendienteFx) return;
+    const rafId = requestAnimationFrame(() => {
+      window.dispatchEvent(
+        new CustomEvent('nexus:logro', {
+          detail: { id: 'curioso', nombre: 'Curioso', elemento: curiosoRef.current },
+        })
+      );
+      window.dispatchEvent(
+        new CustomEvent('nexus:toast', {
+          detail: { texto: '🏆 Logro oculto desbloqueado: Curioso', tipo: 'exito' },
+        })
+      );
+      setCuriosoPendienteFx(false);
+    });
+    return () => cancelAnimationFrame(rafId);
+  }, [curiosoPendienteFx]);
 
   // Toasts + eventos de misión + chat + abrir app
   useEffect(() => {
@@ -427,6 +502,7 @@ export default function App() {
             <Window {...commonProps} defaultSize={{ w: 860, h: 560 }}>
               <AcademyApp
                 scenario={scenario}
+                activo={view === 'os' && !isLocked}
                 onGoToNivel2={() => {
                   setScenario(2);
                   setIsLocked(true);
@@ -460,6 +536,43 @@ export default function App() {
             </Window>
           </div>
         );
+      case 'secret_file':
+        return (
+          <div style={wrapperStyle}>
+            <Window {...commonProps} defaultSize={{ w: 500, h: 360 }}>
+              <div class="h-full flex flex-col gap-3 text-slate-200 text-xs font-mono">
+                <div class="flex items-center justify-between border-b border-white/10 pb-2">
+                  <span class="text-amber-300 font-semibold">📄 NO_ABRIR.txt · Notas clasificadas</span>
+                  {secretos.curioso && (
+                    <span
+                      data-fx="logro"
+                      ref={curiosoRef}
+                      class="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/50 text-amber-200 text-[11px] font-sans font-semibold"
+                    >
+                      🏆 Logro oculto: Curioso
+                    </span>
+                  )}
+                </div>
+                <pre class="flex-1 p-3 rounded-lg bg-black/50 border border-white/10 text-emerald-300 whitespace-pre-wrap leading-relaxed overflow-auto">{`-- ARCHIVO CONFIDENCIAL DE DIEGO (NO ABRIR) --
+
+1. Si estás leyendo esto antes del parcial:
+   SELECT * FROM respuestas_parcial;
+   -- Buen intento 😄 No existe esa tabla.
+
+2. Regla #1 de supervivencia DBA:
+   Nunca ejecutes DELETE FROM sin WHERE un viernes a las 17:59.
+
+3. Pista secreta del escritorio 3D:
+   ¿Ya intentaste girar la taza de café 3 veces seguidas? ☕
+
+-- Firmado: El que tampoco entendió WHERE al principio.`}</pre>
+                <p class="text-[11px] text-slate-400 font-sans">
+                  Los secretos se guardan aparte y no alteran tu progreso del parcial (X/5).
+                </p>
+              </div>
+            </Window>
+          </div>
+        );
       default:
         return null;
     }
@@ -472,6 +585,17 @@ export default function App() {
 
   const abrirApp = (appId) =>
     window.dispatchEvent(new CustomEvent('nexus:open-app', { detail: { appId } }));
+
+  const abrirSecretFile = () => {
+    window.fx?.play?.('pagina');
+    abrirApp('secret_file');
+    if (!leerSecretos().curioso) {
+      const next = { ...leerSecretos(), curioso: true };
+      guardarSecretos(next);
+      setSecretos(next);
+      setCuriosoPendienteFx(true);
+    }
+  };
 
   return (
     <div class="relative w-screen h-screen overflow-hidden bg-[#070a12]">
@@ -567,9 +691,10 @@ export default function App() {
               {/* === Widgets discretos del escritorio (solo Escenario 1, detrás de ventanas) === */}
               {scenario === 1 && (
                 <div class="absolute inset-0 top-8 bottom-20 pointer-events-none z-[1]">
-                  {/* Carpeta Apuntes_BD (esquina superior izquierda) */}
-                  <div class="absolute top-4 left-4 pointer-events-auto">
+                  {/* Carpeta Apuntes_BD + archivo secreto NO_ABRIR.txt (esquina superior izquierda) */}
+                  <div class="absolute top-4 left-4 pointer-events-auto flex flex-col items-start gap-2">
                     <FolderIcon onOpen={() => abrirApp('notes')} />
+                    <SecretFileIcon onOpen={abrirSecretFile} />
                   </div>
 
                   {/* Tarjeta compacta de progreso del parcial (esquina superior derecha) */}
