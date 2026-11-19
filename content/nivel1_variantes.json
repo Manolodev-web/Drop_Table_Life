@@ -1,0 +1,1063 @@
+{
+  "version": 1,
+  "bases_datos": [
+    {
+      "id": "universidad",
+      "nombre": "Universidad",
+      "descripcion": "Gestión académica de estudiantes, docentes, materias, inscripciones y aulas.",
+      "schema_sql": "-- Base de datos universitaria para CampusOS (Nivel 1: Estudiante)\n-- Compatible con SQLite / sql.js\n\nDROP TABLE IF EXISTS inscripciones;\nDROP TABLE IF EXISTS materias;\nDROP TABLE IF EXISTS aulas;\nDROP TABLE IF EXISTS docentes;\nDROP TABLE IF EXISTS estudiantes;\n\nCREATE TABLE estudiantes (\n  id INTEGER PRIMARY KEY,\n  nombre TEXT NOT NULL,\n  apellido TEXT NOT NULL,\n  carrera TEXT NOT NULL,\n  semestre INTEGER NOT NULL,\n  edad INTEGER NOT NULL\n);\n\nCREATE TABLE docentes (\n  id INTEGER PRIMARY KEY,\n  nombre TEXT NOT NULL,\n  apellido TEXT NOT NULL,\n  especialidad TEXT NOT NULL,\n  correo TEXT NOT NULL\n);\n\nCREATE TABLE materias (\n  id INTEGER PRIMARY KEY,\n  nombre TEXT NOT NULL,\n  codigo TEXT NOT NULL UNIQUE,\n  creditos INTEGER NOT NULL,\n  docente_id INTEGER NOT NULL,\n  FOREIGN KEY (docente_id) REFERENCES docentes(id)\n);\n\nCREATE TABLE inscripciones (\n  id INTEGER PRIMARY KEY,\n  estudiante_id INTEGER NOT NULL,\n  materia_id INTEGER NOT NULL,\n  fecha TEXT NOT NULL,\n  nota REAL,\n  FOREIGN KEY (estudiante_id) REFERENCES estudiantes(id),\n  FOREIGN KEY (materia_id) REFERENCES materias(id)\n);\n\nCREATE TABLE aulas (\n  id INTEGER PRIMARY KEY,\n  codigo TEXT NOT NULL UNIQUE,\n  edificio TEXT NOT NULL,\n  capacidad INTEGER NOT NULL\n);\n\nINSERT INTO docentes (id, nombre, apellido, especialidad, correo) VALUES\n  (1, 'Ricardo', 'Rojas', 'Bases de Datos', 'r.rojas@universidad.edu'),\n  (2, 'Elena', 'Mendoza', 'Ingeniería de Software', 'e.mendoza@universidad.edu'),\n  (3, 'Carlos', 'Vega', 'Sistemas Distribuidos', 'c.vega@universidad.edu'),\n  (4, 'Sofía', 'Castro', 'Analítica de Datos', 's.castro@universidad.edu'),\n  (5, 'Javier', 'Paredes', 'Redes y Seguridad', 'j.paredes@universidad.edu');\n\nINSERT INTO aulas (id, codigo, edificio, capacidad) VALUES\n  (1, 'A-204', 'Bloque Ingeniería', 40),\n  (2, 'LAB-01', 'Centro de Cómputo', 30),\n  (3, 'LAB-02', 'Centro de Cómputo', 28),\n  (4, 'B-105', 'Bloque Ciencias', 45),\n  (5, 'C-302', 'Posgrado', 25);\n\nINSERT INTO materias (id, nombre, codigo, creditos, docente_id) VALUES\n  (1, 'Bases de Datos I', 'DAT-201', 5, 1),\n  (2, 'Programación Web', 'SIS-204', 4, 2),\n  (3, 'Estructuras de Datos', 'SIS-108', 5, 3),\n  (4, 'Estadística Aplicada', 'MAT-210', 4, 4),\n  (5, 'Redes de Computadoras', 'SIS-301', 4, 5),\n  (6, 'Taller de Bases de Datos', 'DAT-255', 5, 1);\n\nINSERT INTO estudiantes (id, nombre, apellido, carrera, semestre, edad) VALUES\n  (1,  'Mateo',    'Quispe',    'Sistemas',   4, 20),\n  (2,  'María',    'Flores',    'Sistemas',   5, 22),\n  (3,  'Marco',    'Salazar',   'Industrial', 3, 19),\n  (4,  'Mariana',  'Torrez',    'Sistemas',   6, 24),\n  (5,  'Miguel',   'Choque',    'Industrial', 5, 23),\n  (6,  'Mónica',   'Ríos',      'Sistemas',   4, 21),\n  (7,  'Ana',      'Gutiérrez', 'Sistemas',   3, 19),\n  (8,  'Andrés',   'Mamani',    'Industrial', 4, 21),\n  (9,  'Alejandro','Vargas',    'Civil',      5, 22),\n  (10, 'Lucía',    'Pérez',     'Sistemas',   7, 25),\n  (11, 'Diego',    'Morales',   'Sistemas',   4, 20),\n  (12, 'Valeria',  'Cruz',      'Sistemas',   4, 19),\n  (13, 'Camila',   'Rojas',     'Industrial', 2, 18),\n  (14, 'Sebastián','Loayza',    'Civil',      6, 23),\n  (15, 'Daniela',  'Poma',      'Sistemas',   5, 22),\n  (16, 'Martín',   'Aguilar',   'Civil',      4, 20),\n  (17, 'Natalia',  'Herrera',   'Industrial', 6, 25),\n  (18, 'Gabriel',  'Navarro',   'Sistemas',   2, 18),\n  (19, 'Paula',    'Sánchez',   'Civil',      3, 19),\n  (20, 'Manuel',   'Ortega',    'Industrial', 4, 21),\n  (21, 'Fernanda', 'Lima',      'Sistemas',   8, 26),\n  (22, 'Rodrigo',  'Benítez',   'Civil',      2, 18),\n  (23, 'Melissa',  'Zeballos',  'Sistemas',   5, 22),\n  (24, 'Adriana',  'Cordero',   'Industrial', 3, 20);\n\nINSERT INTO inscripciones (id, estudiante_id, materia_id, fecha, nota) VALUES\n  (1,  1,  1, '2026-08-10', 85),\n  (2,  1,  2, '2026-08-10', 90),\n  (3,  2,  1, '2026-08-11', 92),\n  (4,  2,  6, '2026-08-11', 88),\n  (5,  3,  4, '2026-08-11', 76),\n  (6,  4,  1, '2026-08-12', 95),\n  (7,  4,  6, '2026-08-12', 91),\n  (8,  5,  4, '2026-08-12', 79),\n  (9,  6,  1, '2026-08-12', 84),\n  (10, 7,  1, '2026-08-13', 88),\n  (11, 8,  4, '2026-08-13', 81),\n  (12, 9,  4, '2026-08-13', 73),\n  (13, 10, 6, '2026-08-14', 94),\n  (14, 11, 1, '2026-08-14', 78),\n  (15, 12, 1, '2026-08-14', 89),\n  (16, 13, 4, '2026-08-15', 82),\n  (17, 14, 3, '2026-08-15', 75),\n  (18, 15, 1, '2026-08-15', 87),\n  (19, 16, 4, '2026-08-16', 70),\n  (20, 17, 4, '2026-08-16', 86),\n  (21, 18, 3, '2026-08-16', 80),\n  (22, 19, 4, '2026-08-17', 77),\n  (23, 20, 1, '2026-08-17', 83),\n  (24, 21, 6, '2026-08-17', 96);\n",
+      "esquema_er": {
+        "tablas": [
+          {
+            "nombre": "estudiantes",
+            "descripcion": "Alumnos matriculados en la universidad",
+            "columnas": [
+              {
+                "nombre": "id",
+                "tipo": "INTEGER",
+                "pk": true
+              },
+              {
+                "nombre": "nombre",
+                "tipo": "TEXT"
+              },
+              {
+                "nombre": "apellido",
+                "tipo": "TEXT"
+              },
+              {
+                "nombre": "carrera",
+                "tipo": "TEXT"
+              },
+              {
+                "nombre": "semestre",
+                "tipo": "INTEGER"
+              },
+              {
+                "nombre": "edad",
+                "tipo": "INTEGER"
+              }
+            ]
+          },
+          {
+            "nombre": "docentes",
+            "descripcion": "Profesores responsables de materias",
+            "columnas": [
+              {
+                "nombre": "id",
+                "tipo": "INTEGER",
+                "pk": true
+              },
+              {
+                "nombre": "nombre",
+                "tipo": "TEXT"
+              },
+              {
+                "nombre": "apellido",
+                "tipo": "TEXT"
+              },
+              {
+                "nombre": "especialidad",
+                "tipo": "TEXT"
+              },
+              {
+                "nombre": "correo",
+                "tipo": "TEXT"
+              }
+            ]
+          },
+          {
+            "nombre": "materias",
+            "descripcion": "Asignaturas académicas",
+            "columnas": [
+              {
+                "nombre": "id",
+                "tipo": "INTEGER",
+                "pk": true
+              },
+              {
+                "nombre": "nombre",
+                "tipo": "TEXT"
+              },
+              {
+                "nombre": "codigo",
+                "tipo": "TEXT"
+              },
+              {
+                "nombre": "creditos",
+                "tipo": "INTEGER"
+              },
+              {
+                "nombre": "docente_id",
+                "tipo": "INTEGER",
+                "fk": "docentes.id"
+              }
+            ]
+          },
+          {
+            "nombre": "inscripciones",
+            "descripcion": "Relación N:M entre estudiantes y materias",
+            "columnas": [
+              {
+                "nombre": "id",
+                "tipo": "INTEGER",
+                "pk": true
+              },
+              {
+                "nombre": "estudiante_id",
+                "tipo": "INTEGER",
+                "fk": "estudiantes.id"
+              },
+              {
+                "nombre": "materia_id",
+                "tipo": "INTEGER",
+                "fk": "materias.id"
+              },
+              {
+                "nombre": "fecha",
+                "tipo": "TEXT"
+              },
+              {
+                "nombre": "nota",
+                "tipo": "REAL"
+              }
+            ]
+          },
+          {
+            "nombre": "aulas",
+            "descripcion": "Aulas y laboratorios disponibles",
+            "columnas": [
+              {
+                "nombre": "id",
+                "tipo": "INTEGER",
+                "pk": true
+              },
+              {
+                "nombre": "codigo",
+                "tipo": "TEXT"
+              },
+              {
+                "nombre": "edificio",
+                "tipo": "TEXT"
+              },
+              {
+                "nombre": "capacidad",
+                "tipo": "INTEGER"
+              }
+            ]
+          }
+        ],
+        "relaciones": [
+          "inscripciones.estudiante_id → estudiantes.id",
+          "inscripciones.materia_id → materias.id",
+          "materias.docente_id → docentes.id"
+        ]
+      },
+      "bloques": [
+        {
+          "id": "b1_select",
+          "numero": 1,
+          "titulo": "Fundamentos y SELECT",
+          "clausula_tag": "select",
+          "dificultad": 1,
+          "insignia": "Primera consulta",
+          "xp": 100,
+          "teoria": "SELECT elige las columnas que quieres ver (* significa todas) y FROM indica de qué tabla vienen los datos.",
+          "quiz": {
+            "pregunta": "¿Qué significa el asterisco (*) en SELECT * FROM estudiantes?",
+            "opciones": [
+              "Seleccionar solamente el ID",
+              "Seleccionar todas las columnas",
+              "Eliminar todos los registros",
+              "Ordenar los estudiantes"
+            ],
+            "correcta": 1
+          },
+          "variantes": [
+            {
+              "id": "uni_b1_v1",
+              "enunciado": "Muestra únicamente los nombres y semestres (nombre, semestre) de todos los estudiantes.",
+              "consulta_esperada": "SELECT nombre, semestre FROM estudiantes",
+              "ejemplo": "SELECT nombre, carrera FROM estudiantes;",
+              "ejemplo_guiado": "SELECT nombre FROM estudiantes;",
+              "plantilla": "SELECT _____, _____ FROM _____;",
+              "orden_importa": false
+            },
+            {
+              "id": "uni_b1_v2",
+              "enunciado": "Lista el código, nombre y créditos (codigo, nombre, creditos) de todas las materias registradas.",
+              "consulta_esperada": "SELECT codigo, nombre, creditos FROM materias",
+              "ejemplo": "SELECT codigo, nombre FROM materias;",
+              "ejemplo_guiado": "SELECT nombre, creditos FROM materias;",
+              "plantilla": "SELECT _____, _____, _____ FROM _____;",
+              "orden_importa": false
+            }
+          ]
+        },
+        {
+          "id": "b2_where",
+          "numero": 2,
+          "titulo": "WHERE y operadores",
+          "clausula_tag": "where",
+          "dificultad": 2,
+          "insignia": "Detective de datos",
+          "xp": 120,
+          "teoria": "WHERE filtra filas según una condición (=, >, <, >=, <=). AND exige que se cumplan ambas condiciones; OR exige al menos una.",
+          "quiz": {
+            "pregunta": "¿Qué hace la cláusula WHERE en una consulta SQL?",
+            "opciones": [
+              "Ordena filas",
+              "Filtra registros según una condición",
+              "Selecciona tablas",
+              "Cambia el nombre de las columnas"
+            ],
+            "correcta": 1
+          },
+          "variantes": [
+            {
+              "id": "uni_b2_v1",
+              "enunciado": "Consulta a los estudiantes de la carrera 'Sistemas' que tienen más de 20 años. Muestra nombre, carrera y edad.",
+              "consulta_esperada": "SELECT nombre, carrera, edad FROM estudiantes WHERE carrera = 'Sistemas' AND edad > 20",
+              "ejemplo": "SELECT nombre, edad FROM estudiantes WHERE edad > 21;",
+              "ejemplo_guiado": "SELECT nombre, edad FROM estudiantes WHERE carrera = 'Sistemas';",
+              "plantilla": "SELECT nombre, carrera, edad FROM estudiantes WHERE carrera = '_____' AND edad > _____;",
+              "orden_importa": false
+            },
+            {
+              "id": "uni_b2_v2",
+              "enunciado": "Muestra codigo, edificio y capacidad de las aulas cuya capacidad sea mayor o igual a 30 personas.",
+              "consulta_esperada": "SELECT codigo, edificio, capacidad FROM aulas WHERE capacidad >= 30",
+              "ejemplo": "SELECT codigo, capacidad FROM aulas WHERE capacidad > 25;",
+              "ejemplo_guiado": "SELECT codigo, edificio FROM aulas WHERE capacidad >= 30;",
+              "plantilla": "SELECT codigo, edificio, capacidad FROM _____ WHERE capacidad >= _____;",
+              "orden_importa": false
+            }
+          ]
+        },
+        {
+          "id": "b3_avanzada",
+          "numero": 3,
+          "titulo": "Búsqueda avanzada (BETWEEN, LIKE, IN)",
+          "clausula_tag": "like",
+          "dificultad": 3,
+          "insignia": "Búsqueda avanzada",
+          "xp": 150,
+          "teoria": "BETWEEN incluye los extremos del rango; LIKE busca patrones usando % (cualquier texto); IN comprueba si un valor está dentro de una lista.",
+          "quiz": {
+            "pregunta": "Si buscas nombres que empiecen con la letra M, ¿qué condición es correcta?",
+            "opciones": [
+              "nombre = 'M%'",
+              "nombre LIKE 'M%'",
+              "nombre IN ('M%')",
+              "nombre BETWEEN 'M' AND '%'"
+            ],
+            "correcta": 1
+          },
+          "variantes": [
+            {
+              "id": "uni_b3_v1",
+              "enunciado": "Busca estudiantes de 'Sistemas' o 'Industrial' que tengan entre 18 y 25 años (inclusive) y cuyo nombre comience con 'M'. Muestra nombre, carrera y edad.",
+              "consulta_esperada": "SELECT nombre, carrera, edad FROM estudiantes WHERE carrera IN ('Sistemas', 'Industrial') AND edad BETWEEN 18 AND 25 AND nombre LIKE 'M%'",
+              "ejemplo": "SELECT nombre FROM estudiantes WHERE nombre LIKE 'A%' AND edad BETWEEN 18 AND 22;",
+              "ejemplo_guiado": "SELECT nombre, carrera FROM estudiantes WHERE carrera IN ('Sistemas', 'Industrial');",
+              "plantilla": "SELECT nombre, carrera, edad FROM estudiantes WHERE carrera IN ('Sistemas', 'Industrial') AND edad BETWEEN __ AND __ AND nombre LIKE 'M%';",
+              "orden_importa": false
+            },
+            {
+              "id": "uni_b3_v2",
+              "enunciado": "Encuentra estudiantes de 'Sistemas' o 'Industrial' que cursen entre el semestre 3 y 5 (inclusive) y cuyo nombre empiece con 'A'. Muestra nombre, carrera y semestre.",
+              "consulta_esperada": "SELECT nombre, carrera, semestre FROM estudiantes WHERE carrera IN ('Sistemas', 'Industrial') AND semestre BETWEEN 3 AND 5 AND nombre LIKE 'A%'",
+              "ejemplo": "SELECT nombre, semestre FROM estudiantes WHERE semestre BETWEEN 3 AND 5 AND nombre LIKE 'A%';",
+              "ejemplo_guiado": "SELECT nombre, carrera, semestre FROM estudiantes WHERE carrera IN ('Sistemas', 'Industrial');",
+              "plantilla": "SELECT nombre, carrera, semestre FROM estudiantes WHERE carrera IN (_____) AND semestre BETWEEN __ AND __ AND nombre LIKE '__';",
+              "orden_importa": false
+            }
+          ]
+        },
+        {
+          "id": "b4_order_distinct",
+          "numero": 4,
+          "titulo": "ORDER BY y DISTINCT",
+          "clausula_tag": "order_by",
+          "dificultad": 3,
+          "insignia": "Organizador de datos",
+          "xp": 150,
+          "teoria": "DISTINCT elimina valores duplicados del resultado. ORDER BY ordena las filas de forma ascendente (ASC) o descendente (DESC).",
+          "quiz": {
+            "pregunta": "¿Qué palabra clave elimina valores repetidos del resultado de un SELECT?",
+            "opciones": [
+              "UNIQUE",
+              "ORDER BY",
+              "DISTINCT",
+              "FILTER"
+            ],
+            "correcta": 2
+          },
+          "variantes": [
+            {
+              "id": "uni_b4_v1",
+              "enunciado": "Lista las carreras únicas de los estudiantes (sin repetir) y ordénalas alfabéticamente (ASC).",
+              "consulta_esperada": "SELECT DISTINCT carrera FROM estudiantes ORDER BY carrera ASC",
+              "ejemplo": "SELECT nombre, edad FROM estudiantes ORDER BY edad DESC;",
+              "ejemplo_guiado": "SELECT DISTINCT carrera FROM estudiantes;",
+              "plantilla": "SELECT DISTINCT _____ FROM estudiantes ORDER BY _____ ASC;",
+              "orden_importa": true
+            },
+            {
+              "id": "uni_b4_v2",
+              "enunciado": "Obtén los edificios únicos donde hay aulas (sin repetir) ordenados alfabéticamente de la Z a la A (DESC).",
+              "consulta_esperada": "SELECT DISTINCT edificio FROM aulas ORDER BY edificio DESC",
+              "ejemplo": "SELECT DISTINCT edificio FROM aulas;",
+              "ejemplo_guiado": "SELECT DISTINCT edificio FROM aulas ORDER BY edificio ASC;",
+              "plantilla": "SELECT DISTINCT _____ FROM _____ ORDER BY _____ DESC;",
+              "orden_importa": true
+            }
+          ]
+        },
+        {
+          "id": "b5_parcial",
+          "numero": 5,
+          "titulo": "El parcial universitario",
+          "clausula_tag": "distinct",
+          "dificultad": 4,
+          "insignia": "Sobreviviente del parcial",
+          "xp": 300,
+          "teoria": "Reto integrador del parcial: combina selección de columnas, filtros con IN/BETWEEN/LIKE, ordenamiento y eliminación de duplicados.",
+          "quiz": null,
+          "variantes": [
+            {
+              "id": "uni_b5_v1",
+              "enunciado": "Obtén nombre, carrera y edad (sin duplicados) de estudiantes de 'Sistemas' o 'Industrial', entre 18 y 25 años (inclusive), cuyo nombre empiece con 'M', ordenados de mayor a menor edad.",
+              "consulta_esperada": "SELECT DISTINCT nombre, carrera, edad FROM estudiantes WHERE carrera IN ('Sistemas', 'Industrial') AND edad BETWEEN 18 AND 25 AND nombre LIKE 'M%' ORDER BY edad DESC",
+              "ejemplo": "Usa el Visor E-R y tus Apuntes si necesitas confirmar nombres de columnas.",
+              "ejemplo_guiado": "SELECT nombre, carrera, edad FROM estudiantes WHERE carrera IN ('Sistemas', 'Industrial') AND edad BETWEEN 18 AND 25;",
+              "plantilla": "SELECT DISTINCT nombre, carrera, edad FROM estudiantes WHERE carrera IN (_____) AND edad BETWEEN __ AND __ AND nombre LIKE '__' ORDER BY edad _____;",
+              "orden_importa": true
+            },
+            {
+              "id": "uni_b5_v2",
+              "enunciado": "Obtén nombre, carrera y semestre (sin duplicados) de estudiantes de 'Sistemas' o 'Civil', entre el semestre 3 y 6 (inclusive), cuyo nombre contenga la letra 'a', ordenados por semestre de mayor a menor (DESC).",
+              "consulta_esperada": "SELECT DISTINCT nombre, carrera, semestre FROM estudiantes WHERE carrera IN ('Sistemas', 'Civil') AND semestre BETWEEN 3 AND 6 AND nombre LIKE '%a%' ORDER BY semestre DESC",
+              "ejemplo": "Combina DISTINCT, IN, BETWEEN, LIKE y ORDER BY en una sola consulta.",
+              "ejemplo_guiado": "SELECT nombre, carrera, semestre FROM estudiantes WHERE carrera IN ('Sistemas', 'Civil') AND semestre BETWEEN 3 AND 6;",
+              "plantilla": "SELECT DISTINCT nombre, carrera, semestre FROM estudiantes WHERE carrera IN (_____) AND semestre BETWEEN __ AND __ AND nombre LIKE '___' ORDER BY semestre _____;",
+              "orden_importa": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "biblioteca",
+      "nombre": "Biblioteca Municipal",
+      "descripcion": "Catálogo de libros, autores, categorías, socios lectores y préstamos registrados.",
+      "schema_sql": "-- Base de datos de Biblioteca para CampusOS (Nivel 1: Estudiante)\n-- Compatible con SQLite / sql.js\n\nDROP TABLE IF EXISTS prestamos;\nDROP TABLE IF EXISTS libros;\nDROP TABLE IF EXISTS socios;\nDROP TABLE IF EXISTS autores;\nDROP TABLE IF EXISTS categorias;\n\nCREATE TABLE categorias (\n  id INTEGER PRIMARY KEY,\n  nombre TEXT NOT NULL UNIQUE,\n  pasillo TEXT NOT NULL\n);\n\nCREATE TABLE autores (\n  id INTEGER PRIMARY KEY,\n  nombre TEXT NOT NULL,\n  apellido TEXT NOT NULL,\n  nacionalidad TEXT NOT NULL\n);\n\nCREATE TABLE libros (\n  id INTEGER PRIMARY KEY,\n  titulo TEXT NOT NULL,\n  isbn TEXT NOT NULL UNIQUE,\n  anio INTEGER NOT NULL,\n  paginas INTEGER NOT NULL,\n  disponible INTEGER NOT NULL,\n  autor_id INTEGER NOT NULL,\n  categoria_id INTEGER NOT NULL,\n  FOREIGN KEY (autor_id) REFERENCES autores(id),\n  FOREIGN KEY (categoria_id) REFERENCES categorias(id)\n);\n\nCREATE TABLE socios (\n  id INTEGER PRIMARY KEY,\n  nombre TEXT NOT NULL,\n  apellido TEXT NOT NULL,\n  ciudad TEXT NOT NULL,\n  plan TEXT NOT NULL,\n  edad INTEGER NOT NULL\n);\n\nCREATE TABLE prestamos (\n  id INTEGER PRIMARY KEY,\n  libro_id INTEGER NOT NULL,\n  socio_id INTEGER NOT NULL,\n  fecha_prestamo TEXT NOT NULL,\n  dias INTEGER NOT NULL,\n  devuelto INTEGER NOT NULL,\n  FOREIGN KEY (libro_id) REFERENCES libros(id),\n  FOREIGN KEY (socio_id) REFERENCES socios(id)\n);\n\nINSERT INTO categorias (id, nombre, pasillo) VALUES\n  (1, 'Ciencia Ficción', 'Pasillo A'),\n  (2, 'Novela Histórica', 'Pasillo B'),\n  (3, 'Tecnología', 'Pasillo C'),\n  (4, 'Divulgación', 'Pasillo D'),\n  (5, 'Clásicos', 'Pasillo E');\n\nINSERT INTO autores (id, nombre, apellido, nacionalidad) VALUES\n  (1, 'Isabel', 'Allende', 'Chilena'),\n  (2, 'Gabriel', 'García Márquez', 'Colombiana'),\n  (3, 'Isaac', 'Asimov', 'Estadounidense'),\n  (4, 'Carl', 'Sagan', 'Estadounidense'),\n  (5, 'Edmundo', 'Paz Soldán', 'Boliviana'),\n  (6, 'Jorge', 'Borges', 'Argentina');\n\nINSERT INTO libros (id, titulo, isbn, anio, paginas, disponible, autor_id, categoria_id) VALUES\n  (1,  'El fin de la eternidad',       '978-0-1001', 1998, 288, 1, 3, 1),\n  (2,  'El código del futuro',         '978-0-1002', 2018, 340, 1, 5, 3),\n  (3,  'El laberinto de datos',        '978-0-1003', 2021, 410, 1, 5, 3),\n  (4,  'El sol desnudo',               '978-0-1004', 2004, 260, 0, 3, 1),\n  (5,  'La casa de los espíritus',     '978-0-1005', 2001, 448, 1, 1, 2),\n  (6,  'La ciudad de las bestias',     '978-0-1006', 2005, 320, 1, 1, 2),\n  (7,  'La red invisible',             '978-0-1007', 2019, 295, 1, 5, 3),\n  (8,  'La fundación galáctica',       '978-0-1008', 2012, 370, 0, 3, 1),\n  (9,  'Cosmos y estrellas',           '978-0-1009', 2015, 390, 1, 4, 4),\n  (10, 'Un punto azul pálido',         '978-0-1010', 2011, 355, 1, 4, 4),\n  (11, 'Cien años de soledad',         '978-0-1011', 1996, 471, 1, 2, 5),\n  (12, 'Crónica de una muerte',        '978-0-1012', 2002, 160, 1, 2, 5),\n  (13, 'Ficciones completas',          '978-0-1013', 2008, 240, 1, 6, 5),\n  (14, 'El Aleph moderno',             '978-0-1014', 2014, 210, 0, 6, 5),\n  (15, 'Arquitectura SQL',             '978-0-1015', 2022, 315, 1, 5, 3),\n  (16, 'Algoritmos cotidianos',        '978-0-1016', 2020, 275, 1, 5, 3),\n  (17, 'Viaje al núcleo estelar',      '978-0-1017', 2016, 305, 1, 3, 1),\n  (18, 'Memorias del altiplano',       '978-0-1018', 2013, 280, 1, 5, 2),\n  (19, 'Breve historia del cosmos',    '978-0-1019', 2017, 230, 1, 4, 4),\n  (20, 'Diseño de bases de datos',     '978-0-1020', 2023, 420, 1, 5, 3);\n\nINSERT INTO socios (id, nombre, apellido, ciudad, plan, edad) VALUES\n  (1,  'Camila',   'Vargas',   'La Paz',      'Estudiante', 20),\n  (2,  'Carlos',   'Mendoza',  'Cochabamba',  'Premium',    26),\n  (3,  'Claudia',  'Rojas',    'La Paz',      'Premium',    29),\n  (4,  'Cristian', 'Flores',   'Santa Cruz',  'Básico',     24),\n  (5,  'Lucía',    'Quispe',   'La Paz',      'Estudiante', 21),\n  (6,  'Lucas',    'Paredes',  'Cochabamba',  'Premium',    25),\n  (7,  'Laura',    'Torrez',   'Santa Cruz',  'Estudiante', 19),\n  (8,  'Leonardo', 'Gutiérrez','La Paz',      'Premium',    27),\n  (9,  'Mateo',    'Salazar',  'Cochabamba',  'Estudiante', 22),\n  (10, 'Sofía',    'Castro',   'Santa Cruz',  'Premium',    31),\n  (11, 'Diego',    'Morales',  'La Paz',      'Básico',     23),\n  (12, 'Valeria',  'Cruz',     'Cochabamba',  'Estudiante', 20),\n  (13, 'Andrés',   'Mamani',   'La Paz',      'Premium',    28),\n  (14, 'Natalia',  'Herrera',  'Santa Cruz',  'Básico',     34),\n  (15, 'Gabriel',  'Navarro',  'Oruro',       'Estudiante', 18),\n  (16, 'Paula',    'Sánchez',  'Sucre',       'Premium',    24),\n  (17, 'Daniela',  'Poma',     'La Paz',      'Básico',     22),\n  (18, 'Rodrigo',  'Benítez',  'Cochabamba',  'Premium',    30);\n\nINSERT INTO prestamos (id, libro_id, socio_id, fecha_prestamo, dias, devuelto) VALUES\n  (1,  1,  1,  '2026-09-01', 14, 1),\n  (2,  2,  2,  '2026-09-01', 7,  1),\n  (3,  4,  3,  '2026-09-02', 14, 0),\n  (4,  5,  4,  '2026-09-02', 10, 1),\n  (5,  6,  5,  '2026-09-03', 7,  1),\n  (6,  8,  6,  '2026-09-03', 14, 0),\n  (7,  9,  7,  '2026-09-04', 7,  1),\n  (8,  10, 8,  '2026-09-04', 14, 1),\n  (9,  11, 9,  '2026-09-05', 21, 1),\n  (10, 12, 10, '2026-09-05', 7,  1),\n  (11, 14, 11, '2026-09-06', 14, 0),\n  (12, 15, 12, '2026-09-06', 10, 1),\n  (13, 16, 13, '2026-09-07', 7,  1),\n  (14, 17, 14, '2026-09-07', 14, 1),\n  (15, 18, 15, '2026-09-08', 7,  1),\n  (16, 19, 16, '2026-09-08', 10, 1),\n  (17, 20, 17, '2026-09-09', 14, 1),\n  (18, 3,  18, '2026-09-09', 7,  1),\n  (19, 7,  1,  '2026-09-10', 14, 1),\n  (20, 13, 5,  '2026-09-10', 7,  1);\n",
+      "esquema_er": {
+        "tablas": [
+          {
+            "nombre": "libros",
+            "descripcion": "Catálogo de ejemplares registrados en la biblioteca",
+            "columnas": [
+              {
+                "nombre": "id",
+                "tipo": "INTEGER",
+                "pk": true
+              },
+              {
+                "nombre": "titulo",
+                "tipo": "TEXT"
+              },
+              {
+                "nombre": "isbn",
+                "tipo": "TEXT"
+              },
+              {
+                "nombre": "anio",
+                "tipo": "INTEGER"
+              },
+              {
+                "nombre": "paginas",
+                "tipo": "INTEGER"
+              },
+              {
+                "nombre": "disponible",
+                "tipo": "INTEGER"
+              },
+              {
+                "nombre": "autor_id",
+                "tipo": "INTEGER",
+                "fk": "autores.id"
+              },
+              {
+                "nombre": "categoria_id",
+                "tipo": "INTEGER",
+                "fk": "categorias.id"
+              }
+            ]
+          },
+          {
+            "nombre": "autores",
+            "descripcion": "Escritores de las obras del catálogo",
+            "columnas": [
+              {
+                "nombre": "id",
+                "tipo": "INTEGER",
+                "pk": true
+              },
+              {
+                "nombre": "nombre",
+                "tipo": "TEXT"
+              },
+              {
+                "nombre": "apellido",
+                "tipo": "TEXT"
+              },
+              {
+                "nombre": "nacionalidad",
+                "tipo": "TEXT"
+              }
+            ]
+          },
+          {
+            "nombre": "categorias",
+            "descripcion": "Géneros literarios y su ubicación en pasillos",
+            "columnas": [
+              {
+                "nombre": "id",
+                "tipo": "INTEGER",
+                "pk": true
+              },
+              {
+                "nombre": "nombre",
+                "tipo": "TEXT"
+              },
+              {
+                "nombre": "pasillo",
+                "tipo": "TEXT"
+              }
+            ]
+          },
+          {
+            "nombre": "socios",
+            "descripcion": "Lectores afiliados a la biblioteca",
+            "columnas": [
+              {
+                "nombre": "id",
+                "tipo": "INTEGER",
+                "pk": true
+              },
+              {
+                "nombre": "nombre",
+                "tipo": "TEXT"
+              },
+              {
+                "nombre": "apellido",
+                "tipo": "TEXT"
+              },
+              {
+                "nombre": "ciudad",
+                "tipo": "TEXT"
+              },
+              {
+                "nombre": "plan",
+                "tipo": "TEXT"
+              },
+              {
+                "nombre": "edad",
+                "tipo": "INTEGER"
+              }
+            ]
+          },
+          {
+            "nombre": "prestamos",
+            "descripcion": "Historial de préstamos de libros a socios",
+            "columnas": [
+              {
+                "nombre": "id",
+                "tipo": "INTEGER",
+                "pk": true
+              },
+              {
+                "nombre": "libro_id",
+                "tipo": "INTEGER",
+                "fk": "libros.id"
+              },
+              {
+                "nombre": "socio_id",
+                "tipo": "INTEGER",
+                "fk": "socios.id"
+              },
+              {
+                "nombre": "fecha_prestamo",
+                "tipo": "TEXT"
+              },
+              {
+                "nombre": "dias",
+                "tipo": "INTEGER"
+              },
+              {
+                "nombre": "devuelto",
+                "tipo": "INTEGER"
+              }
+            ]
+          }
+        ],
+        "relaciones": [
+          "libros.autor_id → autores.id",
+          "libros.categoria_id → categorias.id",
+          "prestamos.libro_id → libros.id",
+          "prestamos.socio_id → socios.id"
+        ]
+      },
+      "bloques": [
+        {
+          "id": "b1_select",
+          "numero": 1,
+          "titulo": "Fundamentos y SELECT",
+          "clausula_tag": "select",
+          "dificultad": 1,
+          "insignia": "Primera consulta",
+          "xp": 100,
+          "teoria": "SELECT elige las columnas que quieres ver (* significa todas) y FROM indica de qué tabla vienen los datos.",
+          "quiz": {
+            "pregunta": "¿Qué devuelve la consulta SELECT * FROM libros?",
+            "opciones": [
+              "Solo los títulos de los libros",
+              "Todas las columnas y registros de la tabla libros",
+              "Únicamente los libros disponibles",
+              "El conteo total de autores"
+            ],
+            "correcta": 1
+          },
+          "variantes": [
+            {
+              "id": "bib_b1_v1",
+              "enunciado": "Muestra únicamente el título y el año de publicación (titulo, anio) de todos los libros.",
+              "consulta_esperada": "SELECT titulo, anio FROM libros",
+              "ejemplo": "SELECT titulo, paginas FROM libros;",
+              "ejemplo_guiado": "SELECT titulo FROM libros;",
+              "plantilla": "SELECT _____, _____ FROM _____;",
+              "orden_importa": false
+            },
+            {
+              "id": "bib_b1_v2",
+              "enunciado": "Lista el nombre, apellido y plan (nombre, apellido, plan) de todos los socios de la biblioteca.",
+              "consulta_esperada": "SELECT nombre, apellido, plan FROM socios",
+              "ejemplo": "SELECT nombre, ciudad FROM socios;",
+              "ejemplo_guiado": "SELECT nombre, plan FROM socios;",
+              "plantilla": "SELECT _____, _____, _____ FROM _____;",
+              "orden_importa": false
+            }
+          ]
+        },
+        {
+          "id": "b2_where",
+          "numero": 2,
+          "titulo": "WHERE y operadores",
+          "clausula_tag": "where",
+          "dificultad": 2,
+          "insignia": "Detective de datos",
+          "xp": 120,
+          "teoria": "WHERE filtra filas según una condición (=, >, <, >=, <=). AND exige que se cumplan ambas condiciones; OR exige al menos una.",
+          "quiz": {
+            "pregunta": "¿Qué operador lógico exige que dos condiciones en WHERE se cumplan al mismo tiempo?",
+            "opciones": [
+              "OR",
+              "AND",
+              "FROM",
+              "DISTINCT"
+            ],
+            "correcta": 1
+          },
+          "variantes": [
+            {
+              "id": "bib_b2_v1",
+              "enunciado": "Consulta los libros publicados desde el año 2010 en adelante (anio >= 2010) que tengan más de 250 páginas. Muestra titulo, anio y paginas.",
+              "consulta_esperada": "SELECT titulo, anio, paginas FROM libros WHERE anio >= 2010 AND paginas > 250",
+              "ejemplo": "SELECT titulo, paginas FROM libros WHERE paginas > 300;",
+              "ejemplo_guiado": "SELECT titulo, anio FROM libros WHERE anio >= 2010;",
+              "plantilla": "SELECT titulo, anio, paginas FROM libros WHERE anio >= _____ AND paginas > _____;",
+              "orden_importa": false
+            },
+            {
+              "id": "bib_b2_v2",
+              "enunciado": "Encuentra a los socios con plan 'Premium' que tengan 25 años o más (edad >= 25). Muestra nombre, ciudad y edad.",
+              "consulta_esperada": "SELECT nombre, ciudad, edad FROM socios WHERE plan = 'Premium' AND edad >= 25",
+              "ejemplo": "SELECT nombre, edad FROM socios WHERE plan = 'Estudiante';",
+              "ejemplo_guiado": "SELECT nombre, ciudad FROM socios WHERE plan = 'Premium';",
+              "plantilla": "SELECT nombre, ciudad, edad FROM socios WHERE plan = '_____' AND edad >= _____;",
+              "orden_importa": false
+            }
+          ]
+        },
+        {
+          "id": "b3_avanzada",
+          "numero": 3,
+          "titulo": "Búsqueda avanzada (BETWEEN, LIKE, IN)",
+          "clausula_tag": "like",
+          "dificultad": 3,
+          "insignia": "Búsqueda avanzada",
+          "xp": 150,
+          "teoria": "BETWEEN incluye los extremos del rango; LIKE busca patrones usando % (cualquier texto); IN comprueba si un valor está dentro de una lista.",
+          "quiz": {
+            "pregunta": "¿Cuál condición selecciona títulos que comienzan con la palabra 'El '?",
+            "opciones": [
+              "titulo = 'El %'",
+              "titulo LIKE 'El %'",
+              "titulo IN ('El %')",
+              "titulo BETWEEN 'El' AND '%'"
+            ],
+            "correcta": 1
+          },
+          "variantes": [
+            {
+              "id": "bib_b3_v1",
+              "enunciado": "Busca libros cuya categoria_id sea 1 o 3, tengan entre 200 y 450 páginas (inclusive) y cuyo título empiece con 'El '. Muestra titulo, anio y paginas.",
+              "consulta_esperada": "SELECT titulo, anio, paginas FROM libros WHERE categoria_id IN (1, 3) AND paginas BETWEEN 200 AND 450 AND titulo LIKE 'El %'",
+              "ejemplo": "SELECT titulo FROM libros WHERE titulo LIKE 'La %' AND paginas BETWEEN 250 AND 450;",
+              "ejemplo_guiado": "SELECT titulo, paginas FROM libros WHERE categoria_id IN (1, 3);",
+              "plantilla": "SELECT titulo, anio, paginas FROM libros WHERE categoria_id IN (__, __) AND paginas BETWEEN ___ AND ___ AND titulo LIKE 'El %';",
+              "orden_importa": false
+            },
+            {
+              "id": "bib_b3_v2",
+              "enunciado": "Busca socios que vivan en 'La Paz' o 'Cochabamba', tengan entre 19 y 30 años (inclusive) y cuyo nombre empiece con 'C'. Muestra nombre, ciudad y edad.",
+              "consulta_esperada": "SELECT nombre, ciudad, edad FROM socios WHERE ciudad IN ('La Paz', 'Cochabamba') AND edad BETWEEN 19 AND 30 AND nombre LIKE 'C%'",
+              "ejemplo": "SELECT nombre, ciudad FROM socios WHERE ciudad IN ('La Paz', 'Santa Cruz');",
+              "ejemplo_guiado": "SELECT nombre, edad FROM socios WHERE edad BETWEEN 19 AND 30 AND nombre LIKE 'C%';",
+              "plantilla": "SELECT nombre, ciudad, edad FROM socios WHERE ciudad IN (_____) AND edad BETWEEN __ AND __ AND nombre LIKE '__';",
+              "orden_importa": false
+            }
+          ]
+        },
+        {
+          "id": "b4_order_distinct",
+          "numero": 4,
+          "titulo": "ORDER BY y DISTINCT",
+          "clausula_tag": "order_by",
+          "dificultad": 3,
+          "insignia": "Organizador de datos",
+          "xp": 150,
+          "teoria": "DISTINCT elimina valores duplicados del resultado. ORDER BY ordena las filas de forma ascendente (ASC) o descendente (DESC).",
+          "quiz": {
+            "pregunta": "¿Cómo ordenas una lista de ciudades de forma alfabética de la A a la Z?",
+            "opciones": [
+              "ORDER BY ciudad DESC",
+              "SORT BY ciudad ASC",
+              "ORDER BY ciudad ASC",
+              "DISTINCT ciudad ASC"
+            ],
+            "correcta": 2
+          },
+          "variantes": [
+            {
+              "id": "bib_b4_v1",
+              "enunciado": "Lista las ciudades únicas donde viven los socios (sin repetir) ordenadas alfabéticamente (ASC).",
+              "consulta_esperada": "SELECT DISTINCT ciudad FROM socios ORDER BY ciudad ASC",
+              "ejemplo": "SELECT nombre, edad FROM socios ORDER BY edad DESC;",
+              "ejemplo_guiado": "SELECT DISTINCT ciudad FROM socios;",
+              "plantilla": "SELECT DISTINCT _____ FROM socios ORDER BY _____ ASC;",
+              "orden_importa": true
+            },
+            {
+              "id": "bib_b4_v2",
+              "enunciado": "Obtén las nacionalidades únicas de los autores (sin repetir) ordenadas alfabéticamente de la Z a la A (DESC).",
+              "consulta_esperada": "SELECT DISTINCT nacionalidad FROM autores ORDER BY nacionalidad DESC",
+              "ejemplo": "SELECT DISTINCT nacionalidad FROM autores;",
+              "ejemplo_guiado": "SELECT DISTINCT nacionalidad FROM autores ORDER BY nacionalidad ASC;",
+              "plantilla": "SELECT DISTINCT _____ FROM _____ ORDER BY _____ DESC;",
+              "orden_importa": true
+            }
+          ]
+        },
+        {
+          "id": "b5_parcial",
+          "numero": 5,
+          "titulo": "Reto integrador del parcial",
+          "clausula_tag": "distinct",
+          "dificultad": 4,
+          "insignia": "Sobreviviente del parcial",
+          "xp": 300,
+          "teoria": "Reto integrador del parcial: combina selección de columnas, filtros con IN/BETWEEN/LIKE, ordenamiento y eliminación de duplicados.",
+          "quiz": null,
+          "variantes": [
+            {
+              "id": "bib_b5_v1",
+              "enunciado": "Obtén titulo, anio y paginas (sin duplicados) de los libros con categoria_id en (1, 2, 3), publicados entre 1995 y 2023 (inclusive), cuyo título empiece con 'La ', ordenados de mayor a menor cantidad de páginas.",
+              "consulta_esperada": "SELECT DISTINCT titulo, anio, paginas FROM libros WHERE categoria_id IN (1, 2, 3) AND anio BETWEEN 1995 AND 2023 AND titulo LIKE 'La %' ORDER BY paginas DESC",
+              "ejemplo": "Usa el Visor E-R para confirmar las columnas exactas de la tabla libros.",
+              "ejemplo_guiado": "SELECT titulo, anio, paginas FROM libros WHERE categoria_id IN (1, 2, 3) AND anio BETWEEN 1995 AND 2023;",
+              "plantilla": "SELECT DISTINCT titulo, anio, paginas FROM libros WHERE categoria_id IN (_____) AND anio BETWEEN ____ AND ____ AND titulo LIKE '____' ORDER BY paginas _____;",
+              "orden_importa": true
+            },
+            {
+              "id": "bib_b5_v2",
+              "enunciado": "Obtén nombre, ciudad y edad (sin duplicados) de socios con plan 'Premium' o 'Estudiante', entre 18 y 28 años (inclusive), cuyo nombre empiece con 'L', ordenados de menor a mayor edad (ASC).",
+              "consulta_esperada": "SELECT DISTINCT nombre, ciudad, edad FROM socios WHERE plan IN ('Premium', 'Estudiante') AND edad BETWEEN 18 AND 28 AND nombre LIKE 'L%' ORDER BY edad ASC",
+              "ejemplo": "Combina DISTINCT, IN, BETWEEN, LIKE y ORDER BY ASC.",
+              "ejemplo_guiado": "SELECT nombre, ciudad, edad FROM socios WHERE plan IN ('Premium', 'Estudiante') AND edad BETWEEN 18 AND 28;",
+              "plantilla": "SELECT DISTINCT nombre, ciudad, edad FROM socios WHERE plan IN (_____) AND edad BETWEEN __ AND __ AND nombre LIKE '__' ORDER BY edad _____;",
+              "orden_importa": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cafeteria",
+      "nombre": "Cafetería Universitaria",
+      "descripcion": "Menú de productos, categorías, baristas, clientes frecuentes y pedidos diarios.",
+      "schema_sql": "-- Base de datos de Cafetería para CampusOS (Nivel 1: Estudiante)\n-- Compatible con SQLite / sql.js\n\nDROP TABLE IF EXISTS pedidos;\nDROP TABLE IF EXISTS productos;\nDROP TABLE IF EXISTS clientes;\nDROP TABLE IF EXISTS baristas;\nDROP TABLE IF EXISTS categorias;\n\nCREATE TABLE categorias (\n  id INTEGER PRIMARY KEY,\n  nombre TEXT NOT NULL UNIQUE,\n  area TEXT NOT NULL\n);\n\nCREATE TABLE baristas (\n  id INTEGER PRIMARY KEY,\n  nombre TEXT NOT NULL,\n  apellido TEXT NOT NULL,\n  turno TEXT NOT NULL,\n  experiencia_anios INTEGER NOT NULL\n);\n\nCREATE TABLE productos (\n  id INTEGER PRIMARY KEY,\n  nombre TEXT NOT NULL,\n  precio REAL NOT NULL,\n  calorias INTEGER NOT NULL,\n  disponible INTEGER NOT NULL,\n  categoria_id INTEGER NOT NULL,\n  FOREIGN KEY (categoria_id) REFERENCES categorias(id)\n);\n\nCREATE TABLE clientes (\n  id INTEGER PRIMARY KEY,\n  nombre TEXT NOT NULL,\n  apellido TEXT NOT NULL,\n  nivel TEXT NOT NULL,\n  puntos INTEGER NOT NULL,\n  ciudad TEXT NOT NULL\n);\n\nCREATE TABLE pedidos (\n  id INTEGER PRIMARY KEY,\n  cliente_id INTEGER NOT NULL,\n  barista_id INTEGER NOT NULL,\n  producto_id INTEGER NOT NULL,\n  cantidad INTEGER NOT NULL,\n  total REAL NOT NULL,\n  fecha TEXT NOT NULL,\n  FOREIGN KEY (cliente_id) REFERENCES clientes(id),\n  FOREIGN KEY (barista_id) REFERENCES baristas(id),\n  FOREIGN KEY (producto_id) REFERENCES productos(id)\n);\n\nINSERT INTO categorias (id, nombre, area) VALUES\n  (1, 'Café Caliente', 'Barra Espresso'),\n  (2, 'Bebidas Frías', 'Barra Fría'),\n  (3, 'Repostería', 'Vitrina Dulce'),\n  (4, 'Sándwiches', 'Cocina Rápida'),\n  (5, 'Tés e Infusiones', 'Barra Té');\n\nINSERT INTO baristas (id, nombre, apellido, turno, experiencia_anios) VALUES\n  (1, 'Luciano', 'Vega', 'Mañana', 4),\n  (2, 'Renata', 'Paredes', 'Tarde', 3),\n  (3, 'Esteban', 'Ríos', 'Noche', 2),\n  (4, 'Camila', 'Aguilar', 'Mañana', 5),\n  (5, 'Tomás', 'Herrera', 'Tarde', 1);\n\nINSERT INTO productos (id, nombre, precio, calorias, disponible, categoria_id) VALUES\n  (1,  'Café Americano',       16.0, 15,  1, 1),\n  (2,  'Café Latte Vainilla',  24.0, 180, 1, 1),\n  (3,  'Café Mocaccino',       26.0, 240, 1, 1),\n  (4,  'Café Cold Brew',       22.0, 25,  1, 2),\n  (5,  'Café Frappé Caramelo', 28.0, 310, 1, 2),\n  (6,  'Espresso Doble',       18.0, 10,  1, 1),\n  (7,  'Capuchino Canela',     23.0, 160, 1, 1),\n  (8,  'Flat White',           25.0, 140, 1, 1),\n  (9,  'Matcha Helado',        27.0, 190, 1, 2),\n  (10, 'Limonada Menta',       19.0, 95,  1, 2),\n  (11, 'Smoothie Frutilla',    29.0, 220, 0, 2),\n  (12, 'Tarta de Manzana',     24.0, 320, 1, 3),\n  (13, 'Brownie de Cacao',     20.0, 350, 1, 3),\n  (14, 'Croissant Mantequilla',18.0, 280, 1, 3),\n  (15, 'Cheesecake Maracuyá',  30.0, 390, 1, 3),\n  (16, 'Muffin Arándanos',     19.0, 290, 1, 3),\n  (17, 'Sándwich Caprese',     32.0, 410, 1, 4),\n  (18, 'Bagel Jamón y Queso',  34.0, 440, 1, 4),\n  (19, 'Té Chai Especiado',    21.0, 110, 1, 5),\n  (20, 'Infusión Manzanilla',  14.0, 5,   1, 5);\n\nINSERT INTO clientes (id, nombre, apellido, nivel, puntos, ciudad) VALUES\n  (1,  'Sofía',    'Quispe',    'Oro',    480, 'La Paz'),\n  (2,  'Sebastián','Flores',    'Plata',  260, 'La Paz'),\n  (3,  'Santiago', 'Salazar',   'Oro',    390, 'Cochabamba'),\n  (4,  'Sara',     'Torrez',    'Bronce', 120, 'Santa Cruz'),\n  (5,  'Mateo',    'Choque',    'Oro',    520, 'La Paz'),\n  (6,  'María',    'Ríos',      'Plata',  310, 'Cochabamba'),\n  (7,  'Mariana',  'Gutiérrez', 'Oro',    440, 'Santa Cruz'),\n  (8,  'Miguel',   'Mamani',    'Plata',  230, 'La Paz'),\n  (9,  'Mónica',   'Vargas',    'Bronce', 90,  'Oruro'),\n  (10, 'Ana',      'Pérez',     'Oro',    350, 'La Paz'),\n  (11, 'Diego',    'Morales',   'Plata',  190, 'Cochabamba'),\n  (12, 'Valeria',  'Cruz',      'Oro',    610, 'La Paz'),\n  (13, 'Lucía',    'Rojas',     'Plata',  280, 'Santa Cruz'),\n  (14, 'Andrés',   'Loayza',    'Bronce', 140, 'La Paz'),\n  (15, 'Daniela',  'Poma',      'Oro',    410, 'Cochabamba'),\n  (16, 'Gabriel',  'Navarro',   'Bronce', 80,  'Sucre'),\n  (17, 'Paula',    'Sánchez',   'Plata',  220, 'La Paz'),\n  (18, 'Rodrigo',  'Benítez',   'Oro',    330, 'Santa Cruz');\n\nINSERT INTO pedidos (id, cliente_id, barista_id, producto_id, cantidad, total, fecha) VALUES\n  (1,  1,  1, 2,  1, 24.0, '2026-10-01'),\n  (2,  2,  1, 1,  2, 32.0, '2026-10-01'),\n  (3,  3,  2, 5,  1, 28.0, '2026-10-01'),\n  (4,  4,  2, 13, 1, 20.0, '2026-10-02'),\n  (5,  5,  3, 3,  2, 52.0, '2026-10-02'),\n  (6,  6,  4, 4,  1, 22.0, '2026-10-02'),\n  (7,  7,  4, 15, 1, 30.0, '2026-10-03'),\n  (8,  8,  5, 7,  1, 23.0, '2026-10-03'),\n  (9,  9,  1, 14, 2, 36.0, '2026-10-03'),\n  (10, 10, 2, 8,  1, 25.0, '2026-10-04'),\n  (11, 11, 3, 10, 1, 19.0, '2026-10-04'),\n  (12, 12, 4, 17, 1, 32.0, '2026-10-04'),\n  (13, 13, 5, 9,  1, 27.0, '2026-10-05'),\n  (14, 14, 1, 6,  2, 36.0, '2026-10-05'),\n  (15, 15, 2, 12, 1, 24.0, '2026-10-05'),\n  (16, 16, 3, 20, 1, 14.0, '2026-10-06'),\n  (17, 17, 4, 19, 1, 21.0, '2026-10-06'),\n  (18, 18, 5, 18, 1, 34.0, '2026-10-06'),\n  (19, 1,  4, 16, 1, 19.0, '2026-10-07'),\n  (20, 5,  1, 2,  2, 48.0, '2026-10-07'),\n  (21, 12, 2, 3,  1, 26.0, '2026-10-07'),\n  (22, 7,  3, 1,  1, 16.0, '2026-10-08');\n",
+      "esquema_er": {
+        "tablas": [
+          {
+            "nombre": "productos",
+            "descripcion": "Bebidas y alimentos del menú de la cafetería",
+            "columnas": [
+              {
+                "nombre": "id",
+                "tipo": "INTEGER",
+                "pk": true
+              },
+              {
+                "nombre": "nombre",
+                "tipo": "TEXT"
+              },
+              {
+                "nombre": "precio",
+                "tipo": "REAL"
+              },
+              {
+                "nombre": "calorias",
+                "tipo": "INTEGER"
+              },
+              {
+                "nombre": "disponible",
+                "tipo": "INTEGER"
+              },
+              {
+                "nombre": "categoria_id",
+                "tipo": "INTEGER",
+                "fk": "categorias.id"
+              }
+            ]
+          },
+          {
+            "nombre": "categorias",
+            "descripcion": "Secciones del menú y su barra de preparación",
+            "columnas": [
+              {
+                "nombre": "id",
+                "tipo": "INTEGER",
+                "pk": true
+              },
+              {
+                "nombre": "nombre",
+                "tipo": "TEXT"
+              },
+              {
+                "nombre": "area",
+                "tipo": "TEXT"
+              }
+            ]
+          },
+          {
+            "nombre": "clientes",
+            "descripcion": "Clientes frecuentes del programa de puntos",
+            "columnas": [
+              {
+                "nombre": "id",
+                "tipo": "INTEGER",
+                "pk": true
+              },
+              {
+                "nombre": "nombre",
+                "tipo": "TEXT"
+              },
+              {
+                "nombre": "apellido",
+                "tipo": "TEXT"
+              },
+              {
+                "nombre": "nivel",
+                "tipo": "TEXT"
+              },
+              {
+                "nombre": "puntos",
+                "tipo": "INTEGER"
+              },
+              {
+                "nombre": "ciudad",
+                "tipo": "TEXT"
+              }
+            ]
+          },
+          {
+            "nombre": "baristas",
+            "descripcion": "Personal encargado de preparar los pedidos",
+            "columnas": [
+              {
+                "nombre": "id",
+                "tipo": "INTEGER",
+                "pk": true
+              },
+              {
+                "nombre": "nombre",
+                "tipo": "TEXT"
+              },
+              {
+                "nombre": "apellido",
+                "tipo": "TEXT"
+              },
+              {
+                "nombre": "turno",
+                "tipo": "TEXT"
+              },
+              {
+                "nombre": "experiencia_anios",
+                "tipo": "INTEGER"
+              }
+            ]
+          },
+          {
+            "nombre": "pedidos",
+            "descripcion": "Ventas registradas por cliente, barista y producto",
+            "columnas": [
+              {
+                "nombre": "id",
+                "tipo": "INTEGER",
+                "pk": true
+              },
+              {
+                "nombre": "cliente_id",
+                "tipo": "INTEGER",
+                "fk": "clientes.id"
+              },
+              {
+                "nombre": "barista_id",
+                "tipo": "INTEGER",
+                "fk": "baristas.id"
+              },
+              {
+                "nombre": "producto_id",
+                "tipo": "INTEGER",
+                "fk": "productos.id"
+              },
+              {
+                "nombre": "cantidad",
+                "tipo": "INTEGER"
+              },
+              {
+                "nombre": "total",
+                "tipo": "REAL"
+              },
+              {
+                "nombre": "fecha",
+                "tipo": "TEXT"
+              }
+            ]
+          }
+        ],
+        "relaciones": [
+          "productos.categoria_id → categorias.id",
+          "pedidos.cliente_id → clientes.id",
+          "pedidos.barista_id → baristas.id",
+          "pedidos.producto_id → productos.id"
+        ]
+      },
+      "bloques": [
+        {
+          "id": "b1_select",
+          "numero": 1,
+          "titulo": "Fundamentos y SELECT",
+          "clausula_tag": "select",
+          "dificultad": 1,
+          "insignia": "Primera consulta",
+          "xp": 100,
+          "teoria": "SELECT elige las columnas que quieres ver (* significa todas) y FROM indica de qué tabla vienen los datos.",
+          "quiz": {
+            "pregunta": "¿Qué cláusula indica de qué tabla se obtendrán los datos?",
+            "opciones": [
+              "WHERE",
+              "FROM",
+              "ORDER BY",
+              "LIKE"
+            ],
+            "correcta": 1
+          },
+          "variantes": [
+            {
+              "id": "caf_b1_v1",
+              "enunciado": "Muestra únicamente el nombre y el precio (nombre, precio) de todos los productos del menú.",
+              "consulta_esperada": "SELECT nombre, precio FROM productos",
+              "ejemplo": "SELECT nombre, calorias FROM productos;",
+              "ejemplo_guiado": "SELECT nombre FROM productos;",
+              "plantilla": "SELECT _____, _____ FROM _____;",
+              "orden_importa": false
+            },
+            {
+              "id": "caf_b1_v2",
+              "enunciado": "Lista el nombre, turno y años de experiencia (nombre, turno, experiencia_anios) de todos los baristas.",
+              "consulta_esperada": "SELECT nombre, turno, experiencia_anios FROM baristas",
+              "ejemplo": "SELECT nombre, apellido FROM baristas;",
+              "ejemplo_guiado": "SELECT nombre, turno FROM baristas;",
+              "plantilla": "SELECT _____, _____, _____ FROM _____;",
+              "orden_importa": false
+            }
+          ]
+        },
+        {
+          "id": "b2_where",
+          "numero": 2,
+          "titulo": "WHERE y operadores",
+          "clausula_tag": "where",
+          "dificultad": 2,
+          "insignia": "Detective de datos",
+          "xp": 120,
+          "teoria": "WHERE filtra filas según una condición (=, >, <, >=, <=). AND exige que se cumplan ambas condiciones; OR exige al menos una.",
+          "quiz": {
+            "pregunta": "Si deseas productos que cuesten 25 o menos, ¿qué comparación usas en WHERE?",
+            "opciones": [
+              "precio < 25",
+              "precio <= 25",
+              "precio >= 25",
+              "precio = 25"
+            ],
+            "correcta": 1
+          },
+          "variantes": [
+            {
+              "id": "caf_b2_v1",
+              "enunciado": "Consulta los productos disponibles (disponible = 1) cuyo precio sea menor o igual a 25. Muestra nombre, precio y calorias.",
+              "consulta_esperada": "SELECT nombre, precio, calorias FROM productos WHERE precio <= 25 AND disponible = 1",
+              "ejemplo": "SELECT nombre, precio FROM productos WHERE precio < 20;",
+              "ejemplo_guiado": "SELECT nombre, precio FROM productos WHERE disponible = 1;",
+              "plantilla": "SELECT nombre, precio, calorias FROM productos WHERE precio <= _____ AND disponible = _____;",
+              "orden_importa": false
+            },
+            {
+              "id": "caf_b2_v2",
+              "enunciado": "Encuentra los clientes de nivel 'Oro' que tengan 350 puntos o más (puntos >= 350). Muestra nombre, nivel y puntos.",
+              "consulta_esperada": "SELECT nombre, nivel, puntos FROM clientes WHERE nivel = 'Oro' AND puntos >= 350",
+              "ejemplo": "SELECT nombre, puntos FROM clientes WHERE puntos > 200;",
+              "ejemplo_guiado": "SELECT nombre, nivel FROM clientes WHERE nivel = 'Oro';",
+              "plantilla": "SELECT nombre, nivel, puntos FROM clientes WHERE nivel = '_____' AND puntos >= _____;",
+              "orden_importa": false
+            }
+          ]
+        },
+        {
+          "id": "b3_avanzada",
+          "numero": 3,
+          "titulo": "Búsqueda avanzada (BETWEEN, LIKE, IN)",
+          "clausula_tag": "like",
+          "dificultad": 3,
+          "insignia": "Búsqueda avanzada",
+          "xp": 150,
+          "teoria": "BETWEEN incluye los extremos del rango; LIKE busca patrones usando % (cualquier texto); IN comprueba si un valor está dentro de una lista.",
+          "quiz": {
+            "pregunta": "¿Qué hace el operador BETWEEN 15 AND 30 en SQL?",
+            "opciones": [
+              "Solo selecciona 15 y 30",
+              "Selecciona valores mayores a 15 y menores a 30 sin incluir extremos",
+              "Selecciona valores desde 15 hasta 30 incluyendo ambos extremos",
+              "Ordena los valores del 15 al 30"
+            ],
+            "correcta": 2
+          },
+          "variantes": [
+            {
+              "id": "caf_b3_v1",
+              "enunciado": "Busca productos de categoria_id 1 o 2, con precio entre 15 y 30 (inclusive), cuyo nombre empiece con 'Café'. Muestra nombre, precio y calorias.",
+              "consulta_esperada": "SELECT nombre, precio, calorias FROM productos WHERE categoria_id IN (1, 2) AND precio BETWEEN 15 AND 30 AND nombre LIKE 'Café%'",
+              "ejemplo": "SELECT nombre, precio FROM productos WHERE nombre LIKE 'Café%' AND precio BETWEEN 15 AND 25;",
+              "ejemplo_guiado": "SELECT nombre, precio FROM productos WHERE categoria_id IN (1, 2);",
+              "plantilla": "SELECT nombre, precio, calorias FROM productos WHERE categoria_id IN (__, __) AND precio BETWEEN __ AND __ AND nombre LIKE 'Café%';",
+              "orden_importa": false
+            },
+            {
+              "id": "caf_b3_v2",
+              "enunciado": "Encuentra clientes de nivel 'Oro' o 'Plata', con puntos entre 150 y 500 (inclusive), cuyo nombre empiece con 'S'. Muestra nombre, nivel y puntos.",
+              "consulta_esperada": "SELECT nombre, nivel, puntos FROM clientes WHERE nivel IN ('Oro', 'Plata') AND puntos BETWEEN 150 AND 500 AND nombre LIKE 'S%'",
+              "ejemplo": "SELECT nombre, nivel FROM clientes WHERE nivel IN ('Oro', 'Plata');",
+              "ejemplo_guiado": "SELECT nombre, puntos FROM clientes WHERE puntos BETWEEN 150 AND 500 AND nombre LIKE 'S%';",
+              "plantilla": "SELECT nombre, nivel, puntos FROM clientes WHERE nivel IN (_____) AND puntos BETWEEN ___ AND ___ AND nombre LIKE '__';",
+              "orden_importa": false
+            }
+          ]
+        },
+        {
+          "id": "b4_order_distinct",
+          "numero": 4,
+          "titulo": "ORDER BY y DISTINCT",
+          "clausula_tag": "order_by",
+          "dificultad": 3,
+          "insignia": "Organizador de datos",
+          "xp": 150,
+          "teoria": "DISTINCT elimina valores duplicados del resultado. ORDER BY ordena las filas de forma ascendente (ASC) o descendente (DESC).",
+          "quiz": {
+            "pregunta": "¿Qué resultado produce SELECT DISTINCT nivel FROM clientes?",
+            "opciones": [
+              "Todos los clientes sin filtrar",
+              "Cada nivel de fidelidad una sola vez, sin duplicados",
+              "Solo el nivel con más puntos",
+              "Elimina la columna nivel de la tabla"
+            ],
+            "correcta": 1
+          },
+          "variantes": [
+            {
+              "id": "caf_b4_v1",
+              "enunciado": "Lista los niveles únicos de los clientes (sin repetir) ordenados alfabéticamente (ASC).",
+              "consulta_esperada": "SELECT DISTINCT nivel FROM clientes ORDER BY nivel ASC",
+              "ejemplo": "SELECT nombre, puntos FROM clientes ORDER BY puntos DESC;",
+              "ejemplo_guiado": "SELECT DISTINCT nivel FROM clientes;",
+              "plantilla": "SELECT DISTINCT _____ FROM clientes ORDER BY _____ ASC;",
+              "orden_importa": true
+            },
+            {
+              "id": "caf_b4_v2",
+              "enunciado": "Obtén los turnos únicos en que trabajan los baristas (sin repetir) ordenados alfabéticamente de la Z a la A (DESC).",
+              "consulta_esperada": "SELECT DISTINCT turno FROM baristas ORDER BY turno DESC",
+              "ejemplo": "SELECT DISTINCT turno FROM baristas;",
+              "ejemplo_guiado": "SELECT DISTINCT turno FROM baristas ORDER BY turno ASC;",
+              "plantilla": "SELECT DISTINCT _____ FROM _____ ORDER BY _____ DESC;",
+              "orden_importa": true
+            }
+          ]
+        },
+        {
+          "id": "b5_parcial",
+          "numero": 5,
+          "titulo": "Reto integrador del parcial",
+          "clausula_tag": "distinct",
+          "dificultad": 4,
+          "insignia": "Sobreviviente del parcial",
+          "xp": 300,
+          "teoria": "Reto integrador del parcial: combina selección de columnas, filtros con IN/BETWEEN/LIKE, ordenamiento y eliminación de duplicados.",
+          "quiz": null,
+          "variantes": [
+            {
+              "id": "caf_b5_v1",
+              "enunciado": "Obtén nombre, precio y calorias (sin duplicados) de productos con categoria_id en (1, 2, 3), precio entre 15 y 35 (inclusive), cuyo nombre contenga la letra 'a', ordenados del más caro al más barato (DESC).",
+              "consulta_esperada": "SELECT DISTINCT nombre, precio, calorias FROM productos WHERE categoria_id IN (1, 2, 3) AND precio BETWEEN 15 AND 35 AND nombre LIKE '%a%' ORDER BY precio DESC",
+              "ejemplo": "Usa el Visor E-R para verificar los nombres de columnas de productos.",
+              "ejemplo_guiado": "SELECT nombre, precio, calorias FROM productos WHERE categoria_id IN (1, 2, 3) AND precio BETWEEN 15 AND 35;",
+              "plantilla": "SELECT DISTINCT nombre, precio, calorias FROM productos WHERE categoria_id IN (_____) AND precio BETWEEN __ AND __ AND nombre LIKE '___' ORDER BY precio _____;",
+              "orden_importa": true
+            },
+            {
+              "id": "caf_b5_v2",
+              "enunciado": "Obtén nombre, nivel y puntos (sin duplicados) de clientes de nivel 'Oro' o 'Plata', con puntos entre 200 y 600 (inclusive), cuyo nombre empiece con 'M', ordenados de mayor a menor puntaje (DESC).",
+              "consulta_esperada": "SELECT DISTINCT nombre, nivel, puntos FROM clientes WHERE nivel IN ('Oro', 'Plata') AND puntos BETWEEN 200 AND 600 AND nombre LIKE 'M%' ORDER BY puntos DESC",
+              "ejemplo": "Combina DISTINCT, IN, BETWEEN, LIKE y ORDER BY DESC.",
+              "ejemplo_guiado": "SELECT nombre, nivel, puntos FROM clientes WHERE nivel IN ('Oro', 'Plata') AND puntos BETWEEN 200 AND 600;",
+              "plantilla": "SELECT DISTINCT nombre, nivel, puntos FROM clientes WHERE nivel IN (_____) AND puntos BETWEEN ___ AND ___ AND nombre LIKE '__' ORDER BY puntos _____;",
+              "orden_importa": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

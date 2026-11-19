@@ -1,0 +1,217 @@
+{
+  "version": 1,
+  "bloques": [
+    {
+      "id": "b1_fundamentos",
+      "titulo": "Fundamentos de SELECT",
+      "orden": 1,
+      "lecciones": [
+        {
+          "id": "l1_select_from",
+          "titulo": "Elegir columnas con SELECT",
+          "clausula_tag": "select",
+          "dificultad": 1,
+          "teoria_md": "**SELECT** declara qué columnas quieres ver y **FROM** indica de qué tabla salen. `SELECT *` devuelve todas las columnas, pero en el banco preferimos nombrar solo las que necesitamos: menos datos, más claridad. Termina la consulta con `;`.",
+          "ejemplo_sql": "SELECT nombre, saldo FROM clientes;",
+          "ejercicio": {
+            "enunciado": "Lista la ciudad y el gerente de cada sucursal.",
+            "consulta_esperada": "SELECT ciudad, gerente FROM sucursales",
+            "pista": "Las columnas se separan con comas: SELECT columna1, columna2 FROM tabla."
+          },
+          "quiz": {
+            "pregunta": "¿Qué cláusula indica de qué tabla salen las columnas?",
+            "opciones": [
+              "SELECT",
+              "FROM",
+              "WHERE",
+              "ORDER BY"
+            ],
+            "correcta": 1
+          }
+        },
+        {
+          "id": "l2_where",
+          "titulo": "Filtrar filas con WHERE",
+          "clausula_tag": "where",
+          "dificultad": 1,
+          "teoria_md": "**WHERE** filtra filas *antes* de que se ordene o agrupe nada. Operadores comunes: `=` igual, `<` y `>` comparación, `AND` exige que se cumplan ambas condiciones, `OR` que se cumpla al menos una. Los textos van entre comillas simples: `'La Paz'`.",
+          "ejemplo_sql": "SELECT nombre, saldo FROM clientes WHERE saldo < 0;",
+          "ejercicio": {
+            "enunciado": "Lista nombre y saldo de los clientes con saldo mayor a 3000.",
+            "consulta_esperada": "SELECT nombre, saldo FROM clientes WHERE saldo > 3000",
+            "pista": "Usa el operador > dentro de WHERE, sin punto y coma al final si el comparador lo pide."
+          },
+          "quiz": {
+            "pregunta": "¿Qué cláusula filtra filas antes de ordenar?",
+            "opciones": [
+              "ORDER BY",
+              "WHERE",
+              "GROUP BY",
+              "SELECT"
+            ],
+            "correcta": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "b2_uniones",
+      "titulo": "Uniones con JOIN",
+      "orden": 2,
+      "lecciones": [
+        {
+          "id": "l3_join_basico",
+          "titulo": "Unir tablas con INNER JOIN",
+          "clausula_tag": "join",
+          "dificultad": 2,
+          "teoria_md": "**INNER JOIN** combina filas de dos tablas solo cuando coinciden en la condición del **ON**. Se usa la llave foránea: `clientes.sucursal_id` apunta a `sucursales.id`. Conviene dar alias cortos (`c`, `s`) para no repetir nombres de tabla.",
+          "ejemplo_sql": "SELECT c.nombre, s.ciudad FROM clientes c JOIN sucursales s ON c.sucursal_id = s.id;",
+          "ejercicio": {
+            "enunciado": "Muestra el nombre de cada cliente junto al saldo de cada una de sus cuentas.",
+            "consulta_esperada": "SELECT c.nombre, cu.saldo FROM clientes c JOIN cuentas cu ON cu.cliente_id = c.id",
+            "pista": "La llave foránea es cuentas.cliente_id, que apunta a clientes.id. Usa alias como cu."
+          },
+          "quiz": {
+            "pregunta": "¿Qué cláusula del JOIN define cómo se emparejan las filas?",
+            "opciones": [
+              "WHERE",
+              "ON",
+              "GROUP BY",
+              "USING SELECT"
+            ],
+            "correcta": 1
+          }
+        },
+        {
+          "id": "l4_join_where",
+          "titulo": "JOIN + WHERE: el reporte clásico",
+          "clausula_tag": "join",
+          "dificultad": 2,
+          "teoria_md": "El orden lógico es: primero el **FROM** con sus **JOIN** pegan las tablas; después el **WHERE** filtra el resultado ya unido. Combinarlos resuelve el 80 % de los reportes del banco: 'clientes de tal ciudad con tal condición'.",
+          "ejemplo_sql": "SELECT c.nombre, c.saldo FROM clientes c JOIN sucursales s ON c.sucursal_id = s.id WHERE s.ciudad = 'La Paz' AND c.saldo < 0;",
+          "ejercicio": {
+            "enunciado": "Lista nombre y saldo de los clientes de la sucursal 'El Alto' con saldo negativo.",
+            "consulta_esperada": "SELECT c.nombre, c.saldo FROM clientes c JOIN sucursales s ON c.sucursal_id = s.id WHERE s.ciudad = 'El Alto' AND c.saldo < 0",
+            "pista": "Une clientes con sucursales, filtra por ciudad = 'El Alto' y saldo < 0. Recuerda las comillas simples en el texto."
+          },
+          "quiz": {
+            "pregunta": "En el orden lógico de ejecución, ¿qué va primero?",
+            "opciones": [
+              "WHERE",
+              "JOIN del FROM",
+              "ORDER BY",
+              "SELECT"
+            ],
+            "correcta": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "b3_agregacion",
+      "titulo": "Agregación: COUNT, SUM y GROUP BY",
+      "orden": 3,
+      "lecciones": [
+        {
+          "id": "l5_count_group_by",
+          "titulo": "Contar por grupo con COUNT(*)",
+          "clausula_tag": "group_by",
+          "dificultad": 3,
+          "teoria_md": "**GROUP BY** agrupa filas que comparten valor y las funciones agregadas resumen cada grupo: `COUNT(*)` cuenta filas, `SUM()` suma, `AVG()` promedia. Las columnas del SELECT deben ser las del GROUP BY o funciones agregadas.",
+          "ejemplo_sql": "SELECT s.ciudad, COUNT(*) AS total FROM clientes c JOIN sucursales s ON c.sucursal_id = s.id GROUP BY s.ciudad;",
+          "ejercicio": {
+            "enunciado": "Cuenta cuántas cuentas hay de cada tipo (ahorro, corriente).",
+            "consulta_esperada": "SELECT tipo, COUNT(*) AS total FROM cuentas GROUP BY tipo",
+            "pista": "Agrupa la tabla cuentas por su columna tipo y usa COUNT(*)."
+          },
+          "quiz": {
+            "pregunta": "¿Qué función cuenta las filas de cada grupo?",
+            "opciones": [
+              "SUM",
+              "COUNT(*)",
+              "AVG",
+              "TOTAL"
+            ],
+            "correcta": 1
+          }
+        },
+        {
+          "id": "l6_sum_cadena_joins",
+          "titulo": "SUM con una cadena de JOINs",
+          "clausula_tag": "group_by",
+          "dificultad": 3,
+          "teoria_md": "Para agregar datos que viven en otra tabla hay que **encadenar JOINs**: clientes → cuentas → transacciones. Luego **WHERE** deja solo las filas que importan (por ejemplo `tipo = 'deposito'`) y **SUM** acumula por grupo. Este es el ticket favorito de Tesorería.",
+          "ejemplo_sql": "SELECT c.nombre, SUM(t.monto) AS total FROM clientes c JOIN cuentas cu ON cu.cliente_id = c.id JOIN transacciones t ON t.cuenta_id = cu.id WHERE t.tipo = 'deposito' GROUP BY c.nombre;",
+          "ejercicio": {
+            "enunciado": "Calcula el total retirado por cada cliente (solo transacciones de tipo 'retiro'), de mayor a menor.",
+            "consulta_esperada": "SELECT c.nombre, SUM(t.monto) AS total FROM clientes c JOIN cuentas cu ON cu.cliente_id = c.id JOIN transacciones t ON t.cuenta_id = cu.id WHERE t.tipo = 'retiro' GROUP BY c.nombre ORDER BY total DESC",
+            "pista": "Copia la cadena de JOINs del ejemplo y cambia deposito por retiro; agrega ORDER BY total DESC al final."
+          },
+          "quiz": {
+            "pregunta": "Para sumar depósitos por cliente, ¿qué condición debe tener el WHERE?",
+            "opciones": [
+              "t.monto > 0",
+              "t.tipo = 'deposito'",
+              "cu.tipo = 'ahorro'",
+              "c.saldo > 0"
+            ],
+            "correcta": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "b4_intermedio",
+      "titulo": "Intermedio: orden, límite y subconsultas",
+      "orden": 4,
+      "lecciones": [
+        {
+          "id": "l7_order_limit",
+          "titulo": "Ordenar y limitar resultados",
+          "clausula_tag": "order_by",
+          "dificultad": 2,
+          "teoria_md": "**ORDER BY** ordena el resultado final: `ASC` ascendente (de menor a mayor), `DESC` descendente. **LIMIT** recorta a las primeras N filas. Juntas responden las preguntas típicas: 'los 3 más endeudados', 'el top 5 de saldos'. ORDER BY va casi al final de la consulta.",
+          "ejemplo_sql": "SELECT nombre, saldo FROM clientes ORDER BY saldo ASC LIMIT 3;",
+          "ejercicio": {
+            "enunciado": "Muestra el nombre y saldo de los 5 clientes con mayor saldo del banco.",
+            "consulta_esperada": "SELECT nombre, saldo FROM clientes ORDER BY saldo DESC LIMIT 5",
+            "pista": "ORDER BY saldo DESC ordena de mayor a menor; LIMIT 5 se queda con los primeros cinco."
+          },
+          "quiz": {
+            "pregunta": "¿Qué combinación muestra los 3 saldos más altos?",
+            "opciones": [
+              "ORDER BY saldo ASC LIMIT 3",
+              "ORDER BY saldo DESC LIMIT 3",
+              "LIMIT 3 ORDER BY saldo",
+              "GROUP BY saldo LIMIT 3"
+            ],
+            "correcta": 1
+          }
+        },
+        {
+          "id": "l8_subconsultas",
+          "titulo": "Filtrar con subconsultas",
+          "clausula_tag": "subquery",
+          "dificultad": 4,
+          "teoria_md": "Una **subconsulta** es una consulta dentro de otra. Con `IN` filtras filas cuyo valor está en el resultado de la subconsulta; con operadores de comparación (`>`, `<`) la subconsulta debe devolver un solo valor, como `AVG(saldo)`. Sirven para preguntas de dos pasos: '¿quién está por encima del promedio?' o '¿quién tiene créditos vencidos?'.",
+          "ejemplo_sql": "SELECT nombre, saldo FROM clientes WHERE saldo > (SELECT AVG(saldo) FROM clientes);",
+          "ejercicio": {
+            "enunciado": "Lista los nombres de los clientes que tienen al menos un crédito con estado 'vencido'.",
+            "consulta_esperada": "SELECT nombre FROM clientes WHERE id IN (SELECT cliente_id FROM creditos WHERE estado = 'vencido')",
+            "pista": "La subconsulta devuelve los cliente_id de los créditos vencidos; el filtro exterior es id IN (...)."
+          },
+          "quiz": {
+            "pregunta": "¿Qué devuelve esta subconsulta: (SELECT AVG(saldo) FROM clientes)?",
+            "opciones": [
+              "Una lista de saldos",
+              "Un único valor: el saldo promedio",
+              "Las filas de los clientes",
+              "Una tabla de clientes"
+            ],
+            "correcta": 1
+          }
+        }
+      ]
+    }
+  ]
+}

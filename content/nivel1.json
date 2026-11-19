@@ -1,0 +1,309 @@
+{
+  "version": 1,
+  "titulo": "Capítulo 1: El parcial que no esperabas",
+  "os": {
+    "nombre": "CampusOS",
+    "usuario": "Estudiante",
+    "clave": "SELECTme",
+    "pista_taza": "La contraseña de la práctica está donde siempre guardas lo que no quieres olvidar (revisa tus Apuntes)."
+  },
+  "celular_inicio": {
+    "grupo": "BD — Supervivientes del parcial",
+    "hora": "10:20",
+    "mensajes_iniciales": [
+      { "de": "Diego", "texto": "¿Alguien entendió lo que dejó el docente? Estoy viendo una consulta y parece escrita en otro idioma." },
+      { "de": "Valeria", "texto": "No es tan difícil. Creo que primero hay que entender qué información quieres sacar y de dónde." },
+      { "de": "Diego", "texto": "Eso es exactamente lo que no entiendo: ¿de dónde?" }
+    ],
+    "opciones": [
+      {
+        "id": "A",
+        "texto": "Estoy igual, todavía estoy intentando entenderlo.",
+        "respuesta": [
+          { "de": "Diego", "texto": "Jajaja, al menos somos dos. Voy a revisar los apuntes." }
+        ]
+      },
+      {
+        "id": "B",
+        "texto": "Creo que primero debemos revisar las tablas.",
+        "respuesta": [
+          { "de": "Valeria", "texto": "¡Eso! Si sabemos cómo están organizados los datos en el Visor E-R, la consulta deja de parecer tan complicada." }
+        ]
+      },
+      {
+        "id": "C",
+        "texto": "Tranquilos, soy experto en SQL… experto en cerrar la pestaña.",
+        "respuesta": [
+          { "de": "Diego", "texto": "¡Mentiroso, si te acabo de ver sentado ahí! Ni siquiera has abierto la práctica." },
+          { "de": "Valeria", "texto": "Bueno, bromas aparte, mejor hagámosla antes de que el docente pregunte." }
+        ]
+      }
+    ],
+    "aviso_docente": {
+      "de": "Docente — Aula virtual",
+      "texto": "Buenos días. Recuerden que la práctica de consultas SQL debe completarse antes de la siguiente clase. Está disponible en CampusOS. Usen el esquema universitario como referencia."
+    }
+  },
+  "celular_cierre": {
+    "de": "Diego",
+    "pregunta": "¿Cómo te fue con la práctica?",
+    "opciones": [
+      {
+        "id": "enviada",
+        "texto": "Ya la resolví, pero aún no la envío.",
+        "respuestas": [
+          { "de": "Diego", "texto": "¡Entonces envíala antes de que se te olvide! Yo sigo revisando lo de LIKE, al final ese % era menos complicado." },
+          { "de": "Valeria", "texto": "¿Viste? Era cuestión de practicar. La próxima hacemos el parcial juntos." }
+        ]
+      },
+      {
+        "id": "ayuda",
+        "texto": "Necesito ayuda con el filtro.",
+        "respuestas": [
+          { "de": "Diego", "texto": "¿Cuál filtro? ¿El de edades o el que busca nombres?" },
+          { "de": "Valeria", "texto": "Si buscas algo exacto, usa =. Si buscas un patrón, revisa LIKE." }
+        ]
+      }
+    ]
+  },
+  "correo_final": {
+    "de": "Selección y Talento · Banco Nexus",
+    "asunto": "Recomendación para programa de pasantías",
+    "cuerpo": "Estimado estudiante:\n\nHemos recibido una recomendación académica sobre tu desempeño y capacidad para resolver consultas SQL.\n\nNos gustaría invitarte al programa de pasantías en Banco Nexus, donde trabajarás con bases de datos reales y retos de análisis.\n\nCuando estés listo, pasa al Nivel 2 (Pasante)."
+  },
+  "apuntes": [
+    {
+      "id": "pdf_1",
+      "titulo": "PDF 1 — ¿Qué es una base de datos?",
+      "nota_clave": "CampusOS — Práctica BD · Clave: SELECTme",
+      "resumen": "Una base de datos es un sistema organizado para almacenar información y consultarla con SQL.",
+      "puntos": [
+        "Entidades universitarias: Estudiantes, Docentes, Materias, Inscripciones y Aulas.",
+        "SQL (Structured Query Language) permite pedir información, filtrarla y ordenarla."
+      ],
+      "ejemplo": "SELECT * FROM estudiantes;",
+      "regla": "Las consultas SELECT solo leen datos; no modifican la base de datos."
+    },
+    {
+      "id": "pdf_2",
+      "titulo": "PDF 2 — Entidad, tabla y atributo",
+      "resumen": "Entidad → Tabla → Filas (registros) → Atributos (columnas).",
+      "puntos": [
+        "Entidad: aquello sobre lo que guardamos datos (ej. un estudiante).",
+        "Tabla: la estructura que agrupa registros (ej. estudiantes).",
+        "Atributo: cada característica o columna (nombre, apellido, carrera, semestre, edad)."
+      ],
+      "ejemplo": "estudiantes(id, nombre, apellido, carrera, semestre, edad)",
+      "regla": "Cada fila representa una instancia concreta (un estudiante)."
+    },
+    {
+      "id": "pdf_3",
+      "titulo": "PDF 3 — Llaves (PK y FK)",
+      "resumen": "La llave primaria identifica; la llave foránea conecta.",
+      "puntos": [
+        "PRIMARY KEY (PK): identifica de forma única cada registro (ej. estudiantes.id).",
+        "FOREIGN KEY (FK): apunta a la PK de otra tabla (ej. inscripciones.estudiante_id → estudiantes.id)."
+      ],
+      "ejemplo": "materias.docente_id → docentes.id",
+      "regla": "Antes de unir tablas, ubica siempre qué columna es PK y cuál es FK."
+    },
+    {
+      "id": "pdf_4",
+      "titulo": "PDF 4 — Anatomía de una consulta",
+      "resumen": "SELECT elige columnas · FROM indica la tabla · WHERE filtra filas.",
+      "puntos": [
+        "Orden de escritura: SELECT → FROM → WHERE → ORDER BY.",
+        "El asterisco (*) trae todas las columnas; separar con comas trae columnas específicas."
+      ],
+      "ejemplo": "SELECT nombre, carrera FROM estudiantes WHERE edad > 20 ORDER BY edad DESC;",
+      "regla": "Siempre indica FROM <tabla> para que SQL sepa de dónde obtener los datos."
+    }
+  ],
+  "esquema_er": {
+    "tablas": [
+      {
+        "nombre": "estudiantes",
+        "descripcion": "Alumnos matriculados en la universidad",
+        "columnas": [
+          { "nombre": "id", "tipo": "INTEGER", "pk": true },
+          { "nombre": "nombre", "tipo": "TEXT" },
+          { "nombre": "apellido", "tipo": "TEXT" },
+          { "nombre": "carrera", "tipo": "TEXT" },
+          { "nombre": "semestre", "tipo": "INTEGER" },
+          { "nombre": "edad", "tipo": "INTEGER" }
+        ]
+      },
+      {
+        "nombre": "docentes",
+        "descripcion": "Profesores responsables de materias",
+        "columnas": [
+          { "nombre": "id", "tipo": "INTEGER", "pk": true },
+          { "nombre": "nombre", "tipo": "TEXT" },
+          { "nombre": "apellido", "tipo": "TEXT" },
+          { "nombre": "especialidad", "tipo": "TEXT" },
+          { "nombre": "correo", "tipo": "TEXT" }
+        ]
+      },
+      {
+        "nombre": "materias",
+        "descripcion": "Asignaturas académicas",
+        "columnas": [
+          { "nombre": "id", "tipo": "INTEGER", "pk": true },
+          { "nombre": "nombre", "tipo": "TEXT" },
+          { "nombre": "codigo", "tipo": "TEXT" },
+          { "nombre": "creditos", "tipo": "INTEGER" },
+          { "nombre": "docente_id", "tipo": "INTEGER", "fk": "docentes.id" }
+        ]
+      },
+      {
+        "nombre": "inscripciones",
+        "descripcion": "Relación N:M entre estudiantes y materias",
+        "columnas": [
+          { "nombre": "id", "tipo": "INTEGER", "pk": true },
+          { "nombre": "estudiante_id", "tipo": "INTEGER", "fk": "estudiantes.id" },
+          { "nombre": "materia_id", "tipo": "INTEGER", "fk": "materias.id" },
+          { "nombre": "fecha", "tipo": "TEXT" },
+          { "nombre": "nota", "tipo": "REAL" }
+        ]
+      },
+      {
+        "nombre": "aulas",
+        "descripcion": "Aulas y laboratorios disponibles",
+        "columnas": [
+          { "nombre": "id", "tipo": "INTEGER", "pk": true },
+          { "nombre": "codigo", "tipo": "TEXT" },
+          { "nombre": "edificio", "tipo": "TEXT" },
+          { "nombre": "capacidad", "tipo": "INTEGER" }
+        ]
+      }
+    ],
+    "relaciones": [
+      "inscripciones.estudiante_id → estudiantes.id",
+      "inscripciones.materia_id → materias.id",
+      "materias.docente_id → docentes.id"
+    ]
+  },
+  "bloques": [
+    {
+      "id": "b1_select",
+      "numero": 1,
+      "titulo": "Fundamentos y SELECT",
+      "clausula_tag": "select",
+      "dificultad": 1,
+      "insignia": "Primera consulta",
+      "xp": 100,
+      "teoria": "SELECT elige las columnas que quieres ver (* significa todas) y FROM indica de qué tabla vienen los datos.",
+      "ejemplo": "SELECT nombre, carrera FROM estudiantes;",
+      "quiz": {
+        "pregunta": "¿Qué significa el asterisco (*) en SELECT * FROM estudiantes?",
+        "opciones": [
+          "Seleccionar solamente el ID",
+          "Seleccionar todas las columnas",
+          "Eliminar todos los registros",
+          "Ordenar los estudiantes"
+        ],
+        "correcta": 1
+      },
+      "enunciado": "Muestra únicamente los nombres y semestres (nombre, semestre) de todos los estudiantes.",
+      "consulta_esperada": "SELECT nombre, semestre FROM estudiantes",
+      "ejemplo_guiado": "SELECT nombre FROM estudiantes;",
+      "plantilla": "SELECT _____, _____ FROM _____;",
+      "orden_importa": false
+    },
+    {
+      "id": "b2_where",
+      "numero": 2,
+      "titulo": "WHERE y operadores",
+      "clausula_tag": "where",
+      "dificultad": 2,
+      "insignia": "Detective de datos",
+      "xp": 120,
+      "teoria": "WHERE filtra filas según una condición (=, >, <, >=, <=). AND exige que se cumplan ambas condiciones; OR exige al menos una.",
+      "ejemplo": "SELECT nombre, edad FROM estudiantes WHERE edad > 21;",
+      "quiz": {
+        "pregunta": "¿Qué hace la cláusula WHERE en una consulta SQL?",
+        "opciones": [
+          "Ordena filas",
+          "Filtra registros según una condición",
+          "Selecciona tablas",
+          "Cambia el nombre de las columnas"
+        ],
+        "correcta": 1
+      },
+      "enunciado": "Consulta a los estudiantes de la carrera 'Sistemas' que tienen más de 20 años. Muestra nombre, carrera y edad.",
+      "consulta_esperada": "SELECT nombre, carrera, edad FROM estudiantes WHERE carrera = 'Sistemas' AND edad > 20",
+      "ejemplo_guiado": "SELECT nombre, edad FROM estudiantes WHERE carrera = 'Sistemas';",
+      "plantilla": "SELECT nombre, carrera, edad FROM estudiantes WHERE carrera = '_____' AND edad > _____;",
+      "orden_importa": false
+    },
+    {
+      "id": "b3_avanzada",
+      "numero": 3,
+      "titulo": "Búsqueda avanzada (BETWEEN, LIKE, IN)",
+      "clausula_tag": "like",
+      "dificultad": 3,
+      "insignia": "Búsqueda avanzada",
+      "xp": 150,
+      "teoria": "BETWEEN incluye los extremos del rango; LIKE busca patrones usando % (cualquier texto); IN comprueba si un valor está dentro de una lista.",
+      "ejemplo": "SELECT nombre FROM estudiantes WHERE nombre LIKE 'A%' AND edad BETWEEN 18 AND 22;",
+      "quiz": {
+        "pregunta": "Si buscas nombres que empiecen con la letra M, ¿qué condición es correcta?",
+        "opciones": [
+          "nombre = 'M%'",
+          "nombre LIKE 'M%'",
+          "nombre IN ('M%')",
+          "nombre BETWEEN 'M' AND '%'"
+        ],
+        "correcta": 1
+      },
+      "enunciado": "Busca estudiantes de 'Sistemas' o 'Industrial' que tengan entre 18 y 25 años (inclusive) y cuyo nombre comience con 'M'. Muestra nombre, carrera y edad.",
+      "consulta_esperada": "SELECT nombre, carrera, edad FROM estudiantes WHERE carrera IN ('Sistemas', 'Industrial') AND edad BETWEEN 18 AND 25 AND nombre LIKE 'M%'",
+      "ejemplo_guiado": "SELECT nombre, carrera FROM estudiantes WHERE carrera IN ('Sistemas', 'Industrial');",
+      "plantilla": "SELECT nombre, carrera, edad FROM estudiantes WHERE carrera IN ('Sistemas', 'Industrial') AND edad BETWEEN __ AND __ AND nombre LIKE 'M%';",
+      "orden_importa": false
+    },
+    {
+      "id": "b4_order_distinct",
+      "numero": 4,
+      "titulo": "ORDER BY y DISTINCT",
+      "clausula_tag": "order_by",
+      "dificultad": 3,
+      "insignia": "Organizador de datos",
+      "xp": 150,
+      "teoria": "DISTINCT elimina valores duplicados del resultado. ORDER BY ordena las filas de forma ascendente (ASC) o descendente (DESC).",
+      "ejemplo": "SELECT nombre, edad FROM estudiantes ORDER BY edad DESC;",
+      "quiz": {
+        "pregunta": "¿Qué palabra clave elimina valores repetidos del resultado de un SELECT?",
+        "opciones": [
+          "UNIQUE",
+          "ORDER BY",
+          "DISTINCT",
+          "FILTER"
+        ],
+        "correcta": 2
+      },
+      "enunciado": "Lista las carreras únicas de los estudiantes (sin repetir) y ordénalas alfabéticamente (ASC).",
+      "consulta_esperada": "SELECT DISTINCT carrera FROM estudiantes ORDER BY carrera ASC",
+      "ejemplo_guiado": "SELECT DISTINCT carrera FROM estudiantes;",
+      "plantilla": "SELECT DISTINCT _____ FROM estudiantes ORDER BY _____ ASC;",
+      "orden_importa": true
+    },
+    {
+      "id": "b5_parcial",
+      "numero": 5,
+      "titulo": "El parcial universitario",
+      "clausula_tag": "distinct",
+      "dificultad": 4,
+      "insignia": "Sobreviviente del parcial",
+      "xp": 300,
+      "teoria": "Reto integrador del parcial: combina selección de columnas, filtros con IN/BETWEEN/LIKE, ordenamiento descendente y eliminación de duplicados.",
+      "ejemplo": "Usa el Visor E-R y tus Apuntes si necesitas confirmar nombres de columnas.",
+      "quiz": null,
+      "enunciado": "Obtén nombre, carrera y edad (sin duplicados) de estudiantes de 'Sistemas' o 'Industrial', entre 18 y 25 años (inclusive), cuyo nombre empiece con 'M', ordenados de mayor a menor edad.",
+      "consulta_esperada": "SELECT DISTINCT nombre, carrera, edad FROM estudiantes WHERE carrera IN ('Sistemas', 'Industrial') AND edad BETWEEN 18 AND 25 AND nombre LIKE 'M%' ORDER BY edad DESC",
+      "ejemplo_guiado": "SELECT nombre, carrera, edad FROM estudiantes WHERE carrera IN ('Sistemas', 'Industrial') AND edad BETWEEN 18 AND 25;",
+      "plantilla": "SELECT DISTINCT nombre, carrera, edad FROM estudiantes WHERE carrera IN (_____) AND edad BETWEEN __ AND __ AND nombre LIKE '__' ORDER BY edad _____;",
+      "orden_importa": true
+    }
+  ]
+}

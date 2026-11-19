@@ -1,0 +1,125 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Segoe UI', Inter, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: #07090f;
+    color: #e2e8f0;
+  }
+}
+
+/* Scrollbar estilo macOS oscuro */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+/* Animaciones suaves estilo macOS */
+.window-enter {
+  animation: popIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.shake {
+  animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+@keyframes shake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+  40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+
+/* Transición 3D → OS */
+.os-fade-in {
+  animation: osFade 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes osFade {
+  from {
+    opacity: 0;
+    transform: scale(1.015);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Pulso del prompt del monitor */
+.prompt-pulse {
+  animation: promptPulse 1.6s ease-in-out infinite;
+}
+@keyframes promptPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.35); }
+  50% { box-shadow: 0 0 24px 4px rgba(245, 158, 11, 0.25); }
+}
+
+/* Wallpaper animado estilo macOS oscuro/acogedor */
+.mac-aurora {
+  background: linear-gradient(135deg, #070a12 0%, #0d1528 32%, #12182b 62%, #181326 100%);
+  background-size: 220% 220%;
+  animation: auroraShift 22s ease-in-out infinite;
+}
+.mac-orb-1 {
+  animation: orbFloat1 16s ease-in-out infinite alternate;
+}
+.mac-orb-2 {
+  animation: orbFloat2 20s ease-in-out infinite alternate;
+}
+.mac-orb-3 {
+  animation: orbFloat3 24s ease-in-out infinite alternate;
+}
+@keyframes auroraShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+@keyframes orbFloat1 {
+  from { transform: translate(0, 0) scale(1); }
+  to { transform: translate(55px, 38px) scale(1.1); }
+}
+@keyframes orbFloat2 {
+  from { transform: translate(0, 0) scale(1); }
+  to { transform: translate(-48px, -32px) scale(1.08); }
+}
+@keyframes orbFloat3 {
+  from { transform: translate(0, 0) scale(1); }
+  to { transform: translate(30px, -28px) scale(1.06); }
+}
+
+/* Semáforos de ventana macOS */
+.window-controls .traffic-glyph {
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+.window-controls:hover .traffic-glyph {
+  opacity: 1;
+}
+
+/* Curva elástica del Dock */
+.dock-icon-wrap {
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}

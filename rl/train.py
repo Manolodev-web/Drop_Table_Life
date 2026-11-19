@@ -1,6 +1,14 @@
-"""Entrena Q-learning y SARSA tabulares y exporta web/data.js.
+"""Entrena Q-learning y SARSA tabulares para múltiples misiones y exporta web/data.js.
 
 Uso:  python rl/train.py
+
+Flujo:
+1. Carga `missions/missions.json` y `missions/schema.sql` (fallback si no existen).
+2. Filtra misiones con `"tipo": "rl"` y exactamente 8 `piezas_permitidas`.
+3. Para cada misión entrena Q-learning y SARSA (varias semillas) y calcula
+   baseline aleatorio + política greedy.
+4. Exporta `web/data.js` con `window.DATA = { "version": 1, "misiones": [...] }`
+   respetando el contrato de `docs/CONTRATOS.md`.
 """
 import json
 import random
@@ -9,8 +17,8 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from env import (EJECUTAR, MISION, N_ACCIONES, N_ESTADOS, PIEZAS, BancoTabular,
-                 calcular_tablas)
+from env import (EJECUTAR, N_ACCIONES, N_ESTADOS, BancoTabular,
+                 MISION_FALLBACK, calcular_tablas, cargar_todo)
 
 PARAMS = dict(episodios=4000, alpha=0.2, gamma=0.95, eps0=1.0, eps_min=0.05,
               decay=0.9985, semillas=20, bloque=100)
@@ -48,7 +56,8 @@ def correr(algo, tablas, p, seed):
                 if algo == "sarsa":
                     objetivo = r + p["gamma"] * Q[s2 * N_ACCIONES + a2]
                 else:  # q-learning (off-policy)
-                    objetivo = r + p["gamma"] * max(Q[s2 * N_ACCIONES:(s2 + 1) * N_ACCIONES])
+                    objetivo = r + p["gamma"] * max(
+                        Q[s2 * N_ACCIONES:(s2 + 1) * N_ACCIONES])
             i = s * N_ACCIONES + a
             Q[i] += p["alpha"] * (objetivo - Q[i])
             if done:
@@ -59,10 +68,10 @@ def correr(algo, tablas, p, seed):
     return Q, retornos, exitos
 
 
-def politica_greedy(Q, tablas):
+def politica_greedy(Q, tablas, max_pasos=20):
     env = BancoTabular(tablas)
     s, acciones = env.reset(), []
-    for _ in range(20):
+    for _ in range(max_pasos):
         fila = Q[s * N_ACCIONES:(s + 1) * N_ACCIONES]
         a = fila.index(max(fila))
         acciones.append(a)
@@ -90,15 +99,38 @@ def promedio_bloques(series, bloque):
             for b in range(n)]
 
 
-def main():
-    p = PARAMS
-    tablas = calcular_tablas()
-    print(f"Filas esperadas por la mision: {tablas['filas_esperadas']}")
-    datos = {"mision": MISION, "piezas": PIEZAS, "params": p, **tablas, "curvas": {}, "qtables": {},
-             "politica": {}}
+def _mision_exportable(mision):
+    """Subconjunto de la misión que se publica en data.js (contrato)."""
+    return {
+        "id": mision["id"],
+        "titulo": mision.get("titulo", ""),
+        "remitente": mision.get("remitente", ""),
+        "correo": mision.get("correo", ""),
+        "consulta_esperada": mision["consulta_esperada"],
+    }
+
+
+def entrenar_mision(mision, schema_sql, schema_dict, p):
+    print(f"\n== Misión: {mision['id']} ==")
+    tablas = calcular_tablas(mision, schema_sql, schema_dict)
+    piezas = list(mision["piezas_permitidas"]) + ["EJECUTAR"]
+    print(f"   Filas esperadas por la misión: {tablas['filas_esperadas']}")
+
+    datos = {
+        "mision": _mision_exportable(mision),
+        "piezas": piezas,
+        "sql": tablas["sql"],
+        "rexec": tablas["rexec"],
+        "exacto": tablas["exacto"],
+        "params": p,
+        "curvas": {},
+        "qtables": {},
+        "politica": {},
+    }
+
     base = baseline_aleatorio(tablas)
     datos["baseline"] = round(base, 4)
-    print(f"Baseline aleatorio: {base:.2%} de exito")
+    print(f"   Baseline aleatorio: {base:.2%} de éxito")
 
     for algo in ("qlearning", "sarsa"):
         exitos, retornos, finales = [], [], 0
@@ -116,13 +148,41 @@ def main():
             "retorno": promedio_bloques(retornos, p["bloque"]),
         }
         ult = datos["curvas"][algo]["exito"][-1]
-        print(f"{algo:10s} exito final (ult. bloque, entrenando con eps): {ult:.1%} | "
-              f"politica greedy correcta en {finales}/{p['semillas']} semillas")
-        print("   politica semilla 0:", [PIEZAS[a] for a in datos["politica"][algo]["acciones"]])
+        print(f"   {algo:10s} éxito final (últ. bloque, entrenando con eps): {ult:.1%}"
+              f" | política greedy correcta en {finales}/{p['semillas']} semillas")
+        print(f"      política semilla 0: "
+              f"{[piezas[a] if 0 <= a < len(piezas) else a for a in datos['politica'][algo]['acciones']]}")
 
-    salida = Path(__file__).parent.parent / "web" / "data.js"
-    salida.write_text("window.DATA = " + json.dumps(datos, ensure_ascii=False) + ";\n", encoding="utf-8")
-    print(f"Datos exportados a {salida} ({salida.stat().st_size // 1024} KB)")
+    return datos
+
+
+def main():
+    p = PARAMS
+    misiones, schema_sql, schema_dict = cargar_todo()
+
+    # Sólo misiones resueltas por RL y con exactamente 8 piezas.
+    misiones_rl = [
+        m for m in misiones
+        if m.get("tipo", "rl") == "rl"
+        and isinstance(m.get("piezas_permitidas"), list)
+        and len(m.get("piezas_permitidas", [])) == 8
+    ]
+    if not misiones_rl:
+        print("No hay misiones tipo 'rl' válidas; usando la misión de ejemplo (fallback).")
+        misiones_rl = [MISION_FALLBACK]
+
+    salida = {"version": 1, "misiones": []}
+    for mision in misiones_rl:
+        datos = entrenar_mision(mision, schema_sql, schema_dict, p)
+        salida["misiones"].append(datos)
+
+    out_path = Path(__file__).resolve().parent.parent / "web" / "data.js"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(
+        "window.DATA = " + json.dumps(salida, ensure_ascii=False) + ";\n",
+        encoding="utf-8",
+    )
+    print(f"\nDatos exportados a {out_path} ({out_path.stat().st_size // 1024} KB)")
 
 
 if __name__ == "__main__":

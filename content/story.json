@@ -1,0 +1,71 @@
+{
+  "actos": {
+    "1": {
+      "alerta_inicial": "08:42 — Aula 204. El examen de Bases de Datos empieza en 18 minutos y la puerta se cierra a las 09:00.",
+      "chat": [
+        { "de": "Tú (Estudiante)", "texto": "¿Ya estás? Voy bajando el pasillo, la puerta del aula cierra a las 9 en punto." },
+        { "de": "Mateo (compañero)", "texto": "SI LLEGUÉ primero 😰 Estoy en la fila de atrás. CERRARÁN LA PUERTA, entra rápido" },
+        { "de": "Mateo (compañero)", "texto": "Por cierto... ¿estudiaste lo de los JOINs? El profe dijo que cae una consulta con JOIN seguro" },
+        { "de": "Tú (Estudiante)", "texto": "Repasé anoche. INNER JOIN une filas que coinciden en ambas tablas, ¿no?" },
+        { "de": "Mateo (compañero)", "texto": "Eso dijo en clase, pero a mí se me cruzan los cables con el ON... ¿cómo era que se unen clientes con sucursales?" },
+        { "de": "Tú (Estudiante)", "texto": "con la llave foránea: clientes.sucursal_id = sucursales.id. Tranquilo, si practicaste los ejercicios de la Academia SQL te sale" },
+        { "de": "Mateo (compañero)", "texto": "Jajaja tranquilo dice. Si repruebo me mata mi jefe en el banco... ya que estás: ¿me pasas el apunte de WHERE con AND/OR?" },
+        { "de": "Tú (Estudiante)", "texto": "Va: WHERE filtra filas ANTES de agrupar u ordenar. AND une condiciones, OR da opciones. Te lo dejo en una nota adhesiva en tu pantalla" },
+        { "de": "Mateo (compañero)", "texto": "Eres un salvavidas. Nos vemos adentro. ¡Suerte! 🤞" },
+        { "de": "Prof. Rojas", "texto": "Abran el examen en el sistema. Tienen 90 minutos. Prohibido apuntes... salvo los que hayan escrito ustedes mismos en la Academia. Que aproveche el conocimiento real." }
+      ],
+      "notas": [
+        "Apunte rápido: SELECT elige columnas → FROM elige la tabla → WHERE filtra filas → ORDER BY ordena al final.",
+        "JOIN = pegar tablas por una columna en común. Llave foránea (sucursal_id) apunta a la llave primaria (sucursales.id).",
+        "Examen probable: clientes de 'La Paz' con saldo negativo, ordenados. FROM clientes JOIN sucursales ... WHERE ... ORDER BY ...",
+        "Si repruebo, mi práctica en el banco se cae. Respirar. Escribir SQL desde el minuto 1, como en aprendesql."
+      ],
+      "cierre": "Apruebas con 92/100. A la semana siguiente, el jefe de Mateo te escribe: 'Te recomendaron para pasantía en Banco Nexus. Empiezas el lunes.'"
+    },
+    "2": {
+      "alerta_inicial": "09:03 — Piso 7, Banco Nexus. Primer día como pasante. Te asignan usuario, correo corporativo y una bandeja con 4 tickets.",
+      "chat": [
+        { "de": "Jefa Marcela (Riesgos)", "texto": "¡Bienvenido al equipo! Tu mentor esta semana es Diego. Regla número 1: TODO lo pruebas primero en la base de datos de práctica" },
+        { "de": "Diego (mentor)", "texto": "Hola crack. Te cuento: soy el que arregla lo que rompen los pasantes 😄. Bromas aparte, pregunta todo antes de tocar producción" },
+        { "de": "Diego (mentor)", "texto": "Nunca, NUNCA ejecutes UPDATE o DELETE sin WHERE en producción. Un pasante del 2019 borró la tabla de clientes completa. Sí, pasó. Sí, lloró" },
+        { "de": "Tú (Pasante)", "texto": "Prometido. Solo SELECT por ahora. ¿Por dónde empiezo?" },
+        { "de": "Diego (mentor)", "texto": "Bandeja de tickets. Auditoría quiere 'saldos en rojo en La Paz' antes del mediodía. Tienes el esquema en el visor: sucursales, clientes, cuentas..." },
+        { "de": "Jefa Marcela (Riesgos)", "texto": "URGENTE: el reporte de clientes por ciudad para planeamiento, ¿lo tienen? Lo pidió el gerente general para antes del almuerzo 🙏" },
+        { "de": "Diego (mentor)", "texto": "Se lo paso en 10 min (gracias al pasante nuevo, que ya hizo el JOIN correcto a la primera 👏). Total por ciudad, ordenado de mayor a menor" },
+        { "de": "Tú (Pasante)", "texto": "GROUP BY ciudad con COUNT(*). Ya está en la bandeja. ¿Siguiente?" },
+        { "de": "Diego (mentor)", "texto": "Vas volando. Siguiente: tesorería pide depósitos acumulados por cliente. Ojo, es una cadena de JOINs: clientes → cuentas → transacciones" },
+        { "de": "Jefa Marcela (Riesgos)", "texto": "Cierren el día: tickets resueltos antes del SLA. Y pasante: el Director de Auditoría pidió tu nombre para el turno nocturno de guardia. Eso es buena señal... o mala 😅" }
+      ],
+      "notas": [
+        "Credenciales escritas en un post-it bajo el teclado (mal Diego, muy mal). user: pasante.nexus / no mires, es teatro.",
+        "Recuerdo del mentor: SELECT primero, verificar filas, recién después pensar en escribir algo.",
+        "Ticket difícil = JOIN múltiple. Dibujar el camino: clientes.id → cuentas.cliente_id → transacciones.cuenta_id.",
+        "Guardar avances en localStorage: progreso no se pierde aunque se cuelgue el navegador (de nuevo, Diego)."
+      ],
+      "cierre": "Superas los 90 días de prueba. Tu evaluación dice: 'Resuelve tickets más rápido que el agente RL... a veces.' Esa última parte te queda rondando."
+    },
+    "3": {
+      "alerta_inicial": "23:37 — Guardia nocturna de producción. El piso 7 está vacío, oscuro, solo tú, tres monitores y el pitido de la cafetera.",
+      "chat": [
+        { "de": "Alerta Sistema (NOC)", "texto": "🚨 CRÍTICO: latencia en el servicio de cuentas subió al 400%. Dashboard en rojo. ¿Quién está de guardia?" },
+        { "de": "Tú (DBA de guardia)", "texto": "Yo. Ya estoy en los monitores. ¿Desde cuándo empezó la subida?" },
+        { "de": "Alerta Sistema (NOC)", "texto": "23:31. Coincide con el deploy de la app móvil v2.4.1. El pool de conexiones está saturado: 198/200 activas" },
+        { "de": "Diego (ahora, on-call remoto)", "texto": "Llego en 40 minutos desde casa. Mientras tanto: revisa si alguna consulta nueva está haciendo full scan en transacciones" },
+        { "de": "Tú (DBA de guardia)", "texto": "Encontré una: la app nueva lista TODAS las transacciones sin filtro de fecha. 60 filas ahora, ¿pero qué pasa con 6 millones?" },
+        { "de": "Diego (on-call remoto)", "texto": "Exactamente. Esa es la clase de consulta que hay que detener. Crea un PR con el índice por fecha y el filtro. Yo lo apruebo en cuanto llegue" },
+        { "de": "Bot GitHub (Nexus-Repo)", "texto": "🔔 Nuevo PR #347: 'hotfix: filtro por fecha en listado de transacciones'. También hay PR #348 abierto por otro equipo: 'cleanup masivo de clientes inactivos'" },
+        { "de": "Tú (DBA de guardia)", "texto": "PR #348 a la vista... dice 'DELETE FROM clientes WHERE activo = 0'... ¿y si activo tiene NULLs? Sin WHERE defensivo ni backup previo. RECHAZADO." },
+        { "de": "Diego (on-call remoto)", "texto": "Bien ahí. UPDATE/DELETE sin WHERE claro = no pasa. Escribe el comentario: 'falta respaldo y filtro determinístico. Vuelve a abrir con pg_dump adjunto'" },
+        { "de": "Alerta Sistema (NOC)", "texto": "23:58 — latencia normalizada a 85 ms tras tu hotfix. Servicio restablecido. Buen trabajo, guardia." },
+        { "de": "Diego (on-call remoto)", "texto": "Llegué y todo está en verde. El pasante del 2019 estaría orgulloso. Te debes un café... mañana a las 9, sin excusas ☕" }
+      ],
+      "notas": [
+        "Runbook de guardia: 1) respirar 2) medir (latencia, pool, locks) 3) nunca improvisar en producción 4) anotar TODO para el post-mortem.",
+        "PR peligro detectado: DELETE masivo sin WHERE determinístico ni respaldo. Plantilla de rechazo lista en el portapapeles.",
+        "El agente RL también está de guardia: su tabla Q convergió esta noche. Competir contra tu propia sombra incluye a la máquina.",
+        "05:00 — el sol asoma sobre La Paz. La base está intacta. Drop table life; drop again."
+      ],
+      "cierre": "El incidente queda registrado como 'resuelto en 21 minutos, cero pérdida de datos'. Tu nombre aparece en el acta. DROP TABLE Life; — la vida sigue, la base también."
+    }
+  }
+}

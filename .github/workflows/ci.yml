@@ -1,0 +1,39 @@
+name: CI Banco Nexus
+
+on:
+  push:
+    branches: ["main", "agente/**"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  rl-y-contratos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Instalar dependencias de pruebas
+        run: pip install pytest
+      - name: Ejecutar entrenamiento RL
+        run: python rl/train.py
+      - name: Ejecutar pruebas de contratos y RL
+        run: pytest -v
+
+  web-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: web/package.json
+      - name: Instalar dependencias web
+        run: npm ci
+      - name: Compilar sitio estático (Vercel)
+        run: npm run build

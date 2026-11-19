@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "esquema_sql": "missions/schema.sql",
+  "misiones": [
+    {
+      "id": "m1_saldos_negativos",
+      "acto": 2,
+      "tipo": "rl",
+      "tema": "JOIN + WHERE + ORDER BY",
+      "clausula_tag": "join",
+      "dificultad": 2,
+      "sla_segundos": 120,
+      "remitente": "Dirección de Riesgos",
+      "titulo": "Saldos en rojo en La Paz",
+      "correo": "Buen día. Auditoría nos pidió la lista de clientes de la sucursal La Paz con saldo negativo. Necesito nombre y saldo, del más endeudado al menos endeudado. Lo necesito antes del mediodía.",
+      "consulta_esperada": "SELECT c.nombre, c.saldo FROM clientes c JOIN sucursales s ON c.sucursal_id = s.id WHERE c.saldo < 0 AND s.ciudad = 'La Paz' ORDER BY c.saldo ASC",
+      "piezas_permitidas": [
+        "FROM clientes",
+        "JOIN sucursales",
+        "SELECT nombre",
+        "SELECT saldo",
+        "WHERE saldo < 0",
+        "WHERE ciudad = 'La Paz'",
+        "ORDER BY saldo ASC",
+        "ORDER BY saldo DESC"
+      ],
+      "logro": {
+        "id": "primer_join",
+        "nombre": "Primer JOIN"
+      }
+    },
+    {
+      "id": "m2_mayores_ahorradores",
+      "acto": 2,
+      "tipo": "rl",
+      "tema": "SELECT + WHERE + ORDER BY",
+      "clausula_tag": "order_by",
+      "dificultad": 1,
+      "sla_segundos": 90,
+      "remitente": "Gerencia Comercial",
+      "titulo": "Mayores ahorradores del banco",
+      "correo": "Para la campaña de fidelización necesito el nombre y saldo de los clientes con saldo mayor a 3000, del mayor al menor. Solo eso, rápido.",
+      "consulta_esperada": "SELECT nombre, saldo FROM clientes WHERE saldo > 3000 ORDER BY saldo DESC",
+      "piezas_permitidas": [
+        "FROM clientes",
+        "SELECT nombre",
+        "SELECT saldo",
+        "WHERE saldo > 3000",
+        "WHERE saldo < 0",
+        "ORDER BY saldo DESC",
+        "ORDER BY saldo ASC",
+        "JOIN sucursales"
+      ],
+      "logro": {
+        "id": "orden_perfecto",
+        "nombre": "Orden perfecto"
+      }
+    },
+    {
+      "id": "m3_clientes_por_ciudad",
+      "acto": 2,
+      "tipo": "rl",
+      "tema": "JOIN + COUNT + GROUP BY",
+      "clausula_tag": "group_by",
+      "dificultad": 3,
+      "sla_segundos": 150,
+      "remitente": "Planeamiento",
+      "titulo": "Cartera de clientes por ciudad",
+      "correo": "Con fines de planificación, ¿cuántos clientes tenemos en cada ciudad? Quiero ciudad y total de clientes, ordenado del mayor al menor volumen.",
+      "consulta_esperada": "SELECT s.ciudad, COUNT(*) AS total FROM clientes c JOIN sucursales s ON c.sucursal_id = s.id GROUP BY s.ciudad ORDER BY total DESC",
+      "piezas_permitidas": [
+        "FROM clientes",
+        "JOIN sucursales",
+        "SELECT ciudad",
+        "SELECT COUNT(*) AS total",
+        "GROUP BY ciudad",
+        "ORDER BY total DESC",
+        "ORDER BY total ASC",
+        "WHERE ciudad = 'La Paz'"
+      ],
+      "logro": {
+        "id": "primer_group_by",
+        "nombre": "Primer GROUP BY"
+      }
+    },
+    {
+      "id": "m4_total_depositos",
+      "acto": 2,
+      "tipo": "rl",
+      "tema": "JOIN múltiple + SUM + GROUP BY",
+      "clausula_tag": "group_by",
+      "dificultad": 4,
+      "sla_segundos": 180,
+      "remitente": "Tesorería",
+      "titulo": "Depósitos acumulados por cliente",
+      "correo": "Tesorería: necesito saber cuánto depositó cada cliente en total (sumando solo depósitos, no retiros ni transferencias), de mayor a menor monto acumulado. Clientes y transacciones, como siempre.",
+      "consulta_esperada": "SELECT c.nombre, SUM(t.monto) AS total FROM clientes c JOIN cuentas cu ON cu.cliente_id = c.id JOIN transacciones t ON t.cuenta_id = cu.id WHERE t.tipo = 'deposito' GROUP BY c.nombre ORDER BY total DESC",
+      "piezas_permitidas": [
+        "FROM clientes",
+        "JOIN cuentas",
+        "JOIN transacciones",
+        "SELECT nombre",
+        "SELECT SUM(monto) AS total",
+        "WHERE transacciones.tipo = 'deposito'",
+        "GROUP BY nombre",
+        "ORDER BY total DESC"
+      ],
+      "logro": {
+        "id": "join_multiple",
+        "nombre": "Cadena de JOINs"
+      }
+    },
+    {
+      "id": "m5_creditos_vencidos",
+      "acto": 3,
+      "tipo": "solo_jugador",
+      "tema": "JOIN + WHERE compuesto + auditoría",
+      "clausula_tag": "subquery",
+      "dificultad": 5,
+      "sla_segundos": 120,
+      "remitente": "Auditoría Interna",
+      "titulo": "Créditos vencidos de alto riesgo",
+      "correo": "URGENTE. Para el comité de auditoría necesito a los clientes con créditos vencidos mayores a 5000, con su monto aprobado, ordenados del monto mayor al menor. Estos casos se reportan al regulador hoy.",
+      "consulta_esperada": "SELECT c.nombre, cr.monto_aprobado FROM clientes c JOIN creditos cr ON cr.cliente_id = c.id WHERE cr.estado = 'vencido' AND cr.monto_aprobado > 5000 ORDER BY cr.monto_aprobado DESC",
+      "logro": {
+        "id": "ojo_de_auditor",
+        "nombre": "Ojo de águila"
+      }
+    }
+  ]
+}

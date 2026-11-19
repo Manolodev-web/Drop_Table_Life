@@ -1,6 +1,15 @@
-# Banco Nexus
+# Banco Nexus (`DROP TABLE Life;`)
 
 Juego educativo de SQL ambientado en un banco, donde un agente de **aprendizaje por refuerzo** (Q-learning y SARSA tabulares) aprende a resolver las mismas misiones que el jugador.
+
+## Stack Oficial (Despliegue estático en Vercel Free)
+
+Para garantizar fluidez, bajo peso y compatibilidad 100 % con Vercel gratuito (sin servidores persistentes ni WebSockets):
+- **Escena 3D (entrada atmosférica):** Three.js clásico (≤ 5 MB en assets `.glb` + plan B 2D).
+- **Interfaz 2D (OS simulado):** Vite + Preact + Tailwind CSS.
+- **Motor SQL en navegador:** `sql.js` (SQLite en WebAssembly, sin backend).
+- **Motor RL:** Python 3 en local (`rl/` con Q-learning, SARSA y wrapper `gymnasium.Env`) exportando a `web/data.js` + ejecución en vivo en el navegador (`web/rl.js`).
+- **Prohibido introducir:** Next.js SSR, servidores WebSocket en producción o PyTorch/PGlite en Vercel Serverless.
 
 ## Prototipo de viabilidad (fase 0)
 
